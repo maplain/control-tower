@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/maplain/control-tower/pkg/config"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/maplain/control-tower/pkg/config"
 )
 
 var cfgFile string
@@ -30,10 +30,15 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "ct",
 	Short: "Control Tower that makes fly easier",
-	Long: `ct manages profiles which are configurations for pipeline templates. For example:
+	Long: `ct manages profiles which are configurations for pipeline templates. You can create profile from key-value pairs or a variable file.
+
+For example:
 ct profile list
 ct profile create  --vars="a=b,c=d" --name=deploy-kubo
 ct profile create --var-file ../secrets/pks-nsx-t-release-secrets.yml  --name=pks-nsx-t-release-secrets.
+
+You can also create profile interactively for supported type:
+ct profile create --type deploy-kubo --name=test1
 
 ct is able to fly pipeline based on provided template and profiles. For example:
 ct deploy -p pks-nsx-t-release-secrets -p deploy-kubo -p common-secrets -t npks -m templates/deploy-kubo.yml -t test-pipeline`,

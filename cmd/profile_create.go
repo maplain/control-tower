@@ -18,11 +18,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/maplain/control-tower/pkg/secret"
+	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -38,12 +38,17 @@ var (
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: `a profile can be created from key-value pairs, eg:
+ct profile create  --vars="a=b,c=d" --name=deploy-kubo
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+or from a variable file, eg:
+ct profile create --var-file ../secrets/common-secrets.yml  --name=common-secrets
+
+or interactively for a supported built-in type, eg:
+ct profile create --type deploy-kubo --name test
+
+You can find out all supported types by:
+ct profile types`,
 	Run: func(cmd *cobra.Command, args []string) {
 		validate()
 		var d []byte
@@ -93,8 +98,8 @@ func validate() {
 
 func init() {
 	profileCmd.AddCommand(createCmd)
-	createCmd.Flags().StringToStringVar(&configurations, "vars", make(map[string]string), "common separated key value pairs")
-	createCmd.Flags().StringVar(&varFilePath, "var-file", "", "a file that has key-value pairs in yaml")
+	createCmd.Flags().StringToStringVar(&configurations, "vars", make(map[string]string), "common separated key value pairs, eg: a=b,c=d")
+	createCmd.Flags().StringVar(&varFilePath, "var-file", "", "a yaml file that contains key-value pairs")
 	createCmd.Flags().StringVarP(&profileName, "name", "n", "", "name of the profile")
 	createCmd.Flags().StringVarP(&profileType, "type", "t", "", "type of the profile")
 	createCmd.Flags().BoolVar(&overwrite, "overwrite", false, "whether to overwrite existing profile with the same name")

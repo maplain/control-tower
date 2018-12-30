@@ -18,8 +18,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/spf13/cobra"
 )
 
 var (
