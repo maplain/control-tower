@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/concourse/fly/rc"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -21,7 +18,7 @@ const (
 
 type Cmd struct {
 	path   string
-	target string
+	target rc.TargetName
 	subcmd string
 	args   []string
 }
@@ -41,7 +38,7 @@ func NewFlyCmd() *Cmd {
 	return res
 }
 
-func (c *Cmd) WithTarget(target string) *Cmd {
+func (c *Cmd) WithTarget(target rc.TargetName) *Cmd {
 	c.target = target
 	return c
 }
@@ -59,7 +56,7 @@ func (c *Cmd) WithArg(arg, value string) *Cmd {
 func (c *Cmd) Run() error {
 	args := []string{}
 	if c.target != "" {
-		args = append(args, "--target", c.target)
+		args = append(args, "--target", string(c.target))
 	}
 	if c.subcmd != "" {
 		args = append(args, c.subcmd)
@@ -86,39 +83,40 @@ func NewFlyClient() *Client {
 	if err != nil {
 		cterror.Check(errors.New(fmt.Sprintf("%s doesn't exist on your $PATH. install it before your use", flyBinaryName)))
 	}
-	targets, err := InitializeTargetsFromCfg()
+	targets, err := rc.LoadTargets()
 	if err != nil {
 		cterror.Check(err)
 	}
 	res.path = path
-	res.targets = targets
+	res.targets = targets.Targets
 	return res
 }
 
-func InitializeTargetsFromCfg() (Targets, error) {
-	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		return Targets{}, err
-	}
+// func InitializeTargetsFromCfg() (Targets, error) {
+// 	// Find home directory.
+// 	home, err := homedir.Dir()
+// 	if err != nil {
+// 		return Targets{}, err
+// 	}
+//
+// 	flyCfg := path.Join(home, flyConfigurationFile)
+// 	if !io.NotExist(flyCfg) {
+// 		d, err := io.ReadFromFile(flyCfg)
+// 		cterror.Check(err)
+//
+// 		targets := Targets{}
+// 		err = yaml.Unmarshal(d, &targets)
+// 		cterror.Check(err)
+//
+// 		return targets, nil
+// 	}
+// 	return Targets{}, errors.New(fmt.Sprintf("could not find %s", flyCfg))
+// }
+//
 
-	flyCfg := path.Join(home, flyConfigurationFile)
-	if !io.NotExist(flyCfg) {
-		d, err := io.ReadFromFile(flyCfg)
-		cterror.Check(err)
-
-		targets := Targets{}
-		err = yaml.Unmarshal(d, &targets)
-		cterror.Check(err)
-
-		return targets, nil
-	}
-	return Targets{}, errors.New(fmt.Sprintf("could not find %s", flyCfg))
-}
-
-func (c *Client) Targets() []string {
-	var names []string
-	for n, _ := range c.targets.Targets {
+func (c *Client) Targets() []rc.TargetName {
+	var names []rc.TargetName
+	for n, _ := range c.targets {
 		names = append(names, n)
 	}
 	return names

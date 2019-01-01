@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/maplain/control-tower/templates"
 	"github.com/spf13/cobra"
 )
 
@@ -69,4 +70,8 @@ func ValidateProfileTypes(t string) error {
 		return errors.New(fmt.Sprintf("%s profile type is not supported", t))
 	}
 	return nil
+}
+
+var profileOutputRegistry map[string]templates.PipelineFetchOutputFunc = map[string]templates.PipelineFetchOutputFunc{
+	deployKuboProfileType: templates.DeployKuboPipelineFetchOutputFunc,
 }

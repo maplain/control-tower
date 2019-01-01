@@ -15,13 +15,16 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/concourse/fly/rc"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	client "github.com/maplain/control-tower/pkg/flyclient"
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -34,6 +37,7 @@ const (
 var (
 	templatePath       string
 	deployProfileNames []string
+	deployProfilePaths []string
 	deployTarget       string
 	pipelineName       string
 )
@@ -46,10 +50,12 @@ var deployCmd = &cobra.Command{
 
 ct deploy -t deploy-kubo -p deploy-kubo`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//params := readProfile(deployProfileNames[0])
+		err := deployCmdValidate(deployProfilePaths)
+		cterror.Check(err)
+
 		dcmd := client.NewFlyCmd()
 		if deployTarget != "" {
-			dcmd.WithTarget(deployTarget)
+			dcmd.WithTarget(rc.TargetName(deployTarget))
 		}
 		dcmd.WithSubCommand(setPipelineCmd).
 			WithArg(flyPipelineFlag, pipelineName).
@@ -72,9 +78,22 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 			dcmd.WithArg(flyPipelineLoadVarsFromFlag, tmpfile.Name())
 		}
 
-		err := dcmd.Run()
+		for _, path := range deployProfilePaths {
+			dcmd.WithArg(flyPipelineLoadVarsFromFlag, path)
+		}
+
+		err = dcmd.Run()
 		cterror.Check(err)
 	},
+}
+
+func deployCmdValidate(paths []string) error {
+	for _, path := range paths {
+		if io.NotExist(path) {
+			return errors.New(fmt.Sprintf("%s does not exist", path))
+		}
+	}
+	return nil
 }
 
 func init() {
@@ -83,6 +102,7 @@ func init() {
 	deployCmd.Flags().StringVarP(&templatePath, "template", "m", "", "path to pipeline template")
 	deployCmd.Flags().StringVarP(&deployTarget, "target", "t", "", "fly target name")
 	deployCmd.Flags().StringArrayVarP(&deployProfileNames, "profile-name", "p", nil, "profile name, can be used multiple times to specify many profiles to be used")
+	deployCmd.Flags().StringArrayVar(&deployProfilePaths, "profile-path", nil, "profile path, can be used multiple times to specify many profile paths to be used")
 	deployCmd.Flags().StringVarP(&pipelineName, "pipeline-name", "n", "", "pipeline name you want to set")
 	deployCmd.MarkFlagRequired("profile-names")
 	deployCmd.MarkFlagRequired("template")

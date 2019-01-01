@@ -1,5 +1,7 @@
 package client
 
+import "github.com/concourse/fly/rc"
+
 type Target struct {
 	API      string `yaml:"api"`
 	Team     string `yaml:"team"`
@@ -12,6 +14,4 @@ type Token struct {
 	Value string `yaml:"value"`
 }
 
-type Targets struct {
-	Targets map[string]Target `yaml:"targets"`
-}
+type Targets map[rc.TargetName]rc.TargetProps

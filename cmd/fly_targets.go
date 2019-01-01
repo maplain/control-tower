@@ -15,9 +15,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	client "github.com/maplain/control-tower/pkg/flyclient"
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/spf13/cobra"
 )
 
 // targetsCmd represents the targets command
@@ -32,7 +32,7 @@ ct fly targets`,
 		targets := fclient.Targets()
 		var data [][]string
 		for _, t := range targets {
-			data = append(data, []string{t})
+			data = append(data, []string{string(t)})
 		}
 		io.WriteTable(data, []string{"targets"})
 	},
