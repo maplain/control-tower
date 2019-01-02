@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,20 +15,28 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/maplain/control-tower/pkg/config"
+	cterror "github.com/maplain/control-tower/pkg/error"
+	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
 )
 
-// flyCmd represents the fly command
-var flyCmd = &cobra.Command{
-	Use:   "fly",
-	Short: "concourse fly complementary utility",
+// contextListCmd represents the create command
+var contextListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "list all fly contexts",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("fly called")
+		ctx, err := config.LoadContexts()
+		cterror.Check(err)
+
+		var data [][]string
+		for name, _ := range ctx.Contexts {
+			data = append(data, []string{name})
+		}
+		io.WriteTable(data, []string{"Name"})
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(flyCmd)
+	contextCmd.AddCommand(contextListCmd)
 }

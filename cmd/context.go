@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,15 +20,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// flyCmd represents the fly command
-var flyCmd = &cobra.Command{
-	Use:   "fly",
-	Short: "concourse fly complementary utility",
+// contextCmd represents the context command
+var contextCmd = &cobra.Command{
+	Use:   "context",
+	Short: "manages fly context",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("fly called")
+		fmt.Println("context called")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(flyCmd)
+	rootCmd.AddCommand(contextCmd)
 }
