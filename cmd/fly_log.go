@@ -19,12 +19,18 @@ import (
 
 	"github.com/concourse/fly/rc"
 	"github.com/maplain/control-tower/pkg/concourseclient"
+	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/spf13/cobra"
 )
 
+const (
+	TargetAndContextNameMissingError = cterror.Error("either target or context name should be provided")
+)
+
 var (
 	logCmdBuildID string
+	logCmdTarget  string
 )
 
 // logCmd represents the log command
@@ -35,7 +41,13 @@ var logCmd = &cobra.Command{
 		err := logCmdValidate()
 		cterror.Check(err)
 
-		cli, err := concourseclient.NewConcourseClient(rc.TargetName(flyTarget))
+		target := logCmdTarget
+		if target == "" {
+			ctx, _ := config.LoadContext(contextName)
+			target = ctx.Target
+		}
+
+		cli, err := concourseclient.NewConcourseClient(rc.TargetName(target))
 		cterror.Check(err)
 
 		err = cli.ReadBuildLog(logCmdBuildID, os.Stdout)
@@ -44,6 +56,16 @@ var logCmd = &cobra.Command{
 }
 
 func logCmdValidate() error {
+	if logCmdTarget == "" {
+		if contextName == "" {
+			return TargetAndContextNameMissingError
+		} else {
+			_, err := config.LoadContext(contextName)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -51,5 +73,6 @@ func init() {
 	flyCmd.AddCommand(logCmd)
 
 	logCmd.Flags().StringVarP(&logCmdBuildID, "id", "i", "", "build id")
+	logCmd.Flags().StringVarP(&logCmdTarget, "target", "t", "", "fly target")
 	logCmd.MarkFlagRequired("id")
 }

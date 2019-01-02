@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,18 +17,34 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/maplain/control-tower/pkg/config"
+	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 )
 
-// flyCmd represents the fly command
-var flyCmd = &cobra.Command{
-	Use:   "fly",
-	Short: "concourse fly complementary utility",
+var (
+	contextViewName string
+)
+
+// contextViewCmd represents the view command
+var contextViewCmd = &cobra.Command{
+	Use:   "view",
+	Short: "view a specific context",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("fly called")
+		ctx, err := config.LoadContext(contextViewName)
+		cterror.Check(err)
+
+		data, err := yaml.Marshal(&ctx)
+		cterror.Check(err)
+
+		fmt.Printf("%s", string(data))
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(flyCmd)
+	contextCmd.AddCommand(contextViewCmd)
+
+	contextViewCmd.Flags().StringVarP(&contextViewName, "name", "n", "", "name of the context")
+	contextViewCmd.MarkFlagRequired("name")
 }
