@@ -15,30 +15,29 @@
 package cmd
 
 import (
-	"strconv"
-
+	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
-	"github.com/maplain/control-tower/pkg/io"
+	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 )
 
-// contextListCmd represents the create command
-var contextListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "list all fly contexts",
+// openCmd represents the open command
+var openCmd = &cobra.Command{
+	Use:   "open",
+	Short: "open in use fly context",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, err := config.LoadContexts()
+		ctx, name, err := config.LoadInUseContext()
 		cterror.Check(err)
 
-		var data [][]string
-		for name, c := range ctx.Contexts {
-			data = append(data, []string{name, strconv.FormatBool(c.InUse)})
-		}
-		io.WriteTable(data, []string{"Name", "Use"})
+		c := ctx.Contexts[name]
+		u, err := concourseclient.GetPipelineURL(c.Target, c.Pipeline)
+		cterror.Check(err)
+
+		open.Start(u)
 	},
 }
 
 func init() {
-	contextCmd.AddCommand(contextListCmd)
+	rootCmd.AddCommand(openCmd)
 }

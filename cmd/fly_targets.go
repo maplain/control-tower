@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	cterror "github.com/maplain/control-tower/pkg/error"
 	client "github.com/maplain/control-tower/pkg/flyclient"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
@@ -28,7 +29,9 @@ var targetsCmd = &cobra.Command{
 
 ct fly targets`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fclient := client.NewFlyClient()
+		fclient, err := client.NewFlyClient()
+		cterror.Check(err)
+
 		targets := fclient.Targets()
 		var data [][]string
 		for _, t := range targets {

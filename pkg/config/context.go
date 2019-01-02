@@ -10,15 +10,19 @@ import (
 )
 
 const (
-	contextFilename     = ".control-tower-contexts"
-	ContextAlreadyExist = cterror.Error("context already exists")
-	ContextNotFound     = cterror.Error("context not found")
+	contextFilename          = ".control-tower-contexts"
+	ContextAlreadyExist      = cterror.Error("context already exists")
+	ContextNotFound          = cterror.Error("context not found")
+	NoContextInUseFoundError = cterror.Error("no context in use found")
+	ContextNotSetError       = cterror.Error("context is not set")
 )
 
 type Context struct {
-	Target   string `yaml:"target"`
-	Team     string `yaml:"team"`
-	Pipeline string `yaml:"pipeline"`
+	Target       string `yaml:"target"`
+	Team         string `yaml:"team"`
+	Pipeline     string `yaml:"pipeline"`
+	PipelineType string `yaml:"type"`
+	InUse        bool   `yaml:"inuse"`
 }
 
 func (c *Context) Save(name string, overwrite bool) error {
@@ -93,4 +97,22 @@ func GetContextsFilepath() (string, error) {
 		return "", err
 	}
 	return path.Join(home, contextFilename), nil
+}
+
+func LoadInUseContext() (Contexts, string, error) {
+	ctx, err := LoadContexts()
+	if err != nil {
+		return ctx, "", err
+	}
+	n, err := GetInUseContext(ctx)
+	return ctx, n, err
+}
+
+func GetInUseContext(ctx Contexts) (string, error) {
+	for n, c := range ctx.Contexts {
+		if c.InUse {
+			return n, nil
+		}
+	}
+	return "", NoContextInUseFoundError
 }

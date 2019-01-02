@@ -43,8 +43,10 @@ var logCmd = &cobra.Command{
 
 		target := logCmdTarget
 		if target == "" {
-			ctx, _ := config.LoadContext(contextName)
-			target = ctx.Target
+			ctx, name, err := config.LoadInUseContext()
+			if err == nil {
+				target = ctx.Contexts[name].Target
+			}
 		}
 
 		cli, err := concourseclient.NewConcourseClient(rc.TargetName(target))
@@ -57,13 +59,9 @@ var logCmd = &cobra.Command{
 
 func logCmdValidate() error {
 	if logCmdTarget == "" {
-		if contextName == "" {
-			return TargetAndContextNameMissingError
-		} else {
-			_, err := config.LoadContext(contextName)
-			if err != nil {
-				return err
-			}
+		_, _, err := config.LoadInUseContext()
+		if err != nil {
+			return err
 		}
 	}
 	return nil

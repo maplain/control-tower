@@ -15,18 +15,13 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // contextCmd represents the context command
 var contextCmd = &cobra.Command{
 	Use:   "context",
-	Short: "manages fly context",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("context called")
-	},
+	Short: "manages fly contexts",
 }
 
 func init() {
