@@ -50,9 +50,10 @@ ct profile create --type deploy-kubo --name test
 You can find out all supported types by:
 ct profile types`,
 	Run: func(cmd *cobra.Command, args []string) {
-		validate()
+		err := profileCreateValidate()
+		cterror.Check(err)
+
 		var d []byte
-		var err error
 
 		if profileType == "" {
 			if len(configurations) != 0 {
@@ -73,27 +74,33 @@ ct profile types`,
 
 		filepath, err := config.GetProfilePath(profileName)
 		cterror.Check(err)
-
-		if !io.NotExist(filepath) {
-			if !overwrite {
-				fmt.Printf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName)
-				return
-			}
-		}
 		err = io.WriteToFile(ed, filepath)
 		cterror.Check(err)
 	},
 }
 
-func validate() {
+func profileCreateValidate() error {
 	if profileType == "" {
 		if len(configurations) == 0 && varFilePath == "" {
-			cterror.Check(errors.New("at least one value should be provided for --vars and --var-file"))
+			return errors.New("at least one value should be provided for --vars and --var-file")
 		}
 	} else {
 		err := ValidateProfileTypes(profileType)
-		cterror.Check(err)
+		if err != nil {
+			return err
+		}
 	}
+	filepath, err := config.GetProfilePath(profileName)
+	if err != nil {
+		return err
+	}
+
+	if !io.NotExist(filepath) {
+		if !overwrite {
+			return errors.New(fmt.Sprintf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName))
+		}
+	}
+	return nil
 }
 
 func init() {

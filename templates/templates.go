@@ -13,6 +13,7 @@ type PipelineFetchOutputFunc func(team, pipeline string, cli concourseclient.Con
 type PipelineOutput map[string]string
 
 var DeployKuboPipelineFetchOutputFunc = PipelineFetchOutputFunc(deployKuboPipelineOutput)
+var NsxAcceptanceTestsPipelineFetchOutputFunc = PipelineFetchOutputFunc(nsxAcceptanceTestsPipelineOutput)
 
 // deploy-kubo template specific logic
 func deployKuboPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error) {
@@ -52,5 +53,32 @@ func deployKuboPipelineOutput(team, pipeline string, cli concourseclient.Concour
 		}
 	}
 
+	return PipelineOutput(res), nil
+}
+
+// nsx-acceptance-tests template specific logic
+func nsxAcceptanceTestsPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error) {
+	res := make(map[string]string)
+	build, err := cli.LatestJobBuild(team, pipeline, "run-release-tests")
+	if err != nil {
+		if err != concourseclient.BuildNotFoundError {
+			return PipelineOutput(res), err
+		}
+	} else {
+		res["run-release-tests-status"] = build.Status
+		res["run-release-tests-id"] = strconv.Itoa(build.ID)
+		res["run-release-tests-name"] = build.Name
+	}
+
+	build, err = cli.LatestJobBuild(team, pipeline, "run-conformance-tests")
+	if err != nil {
+		if err != concourseclient.BuildNotFoundError {
+			return PipelineOutput(res), err
+		}
+	} else {
+		res["run-conformance-tests-status"] = build.Status
+		res["run-conformance-tests-id"] = strconv.Itoa(build.ID)
+		res["run-conformance-tests-name"] = build.Name
+	}
 	return PipelineOutput(res), nil
 }

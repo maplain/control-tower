@@ -49,29 +49,41 @@ func init() {
 }
 
 const (
-	deployKuboProfileType = "deploy-kubo"
+	deployKuboProfileType         = "deploy-kubo"
+	nsxAcceptanceTestsProfileType = "nsx-acceptance-tests"
 )
 
 var profileRegistry map[string]io.Values = map[string]io.Values{
 	deployKuboProfileType: map[string]string{
+		"kubeconfig-bucket":                "vmw-pks-pipeline-store",
+		"kubeconfig-folder":                "pks-networking-kubeconfigs",
+		"pks-lock-branch":                  "master",
+		"pks-lock-pool":                    "nsx",
+		"pks-nsx-t-release-branch":         "ci-improvements-proto",
+		"pks-nsx-t-release-tarball-bucket": "vmw-pks-pipeline-store",
+		"pks-nsx-t-release-tarball-path":   "pks-nsx-t/pks-nsx-t-(.*).tgz",
+	},
+	nsxAcceptanceTestsProfileType: map[string]string{
 		"kubeconfig-bucket":        "vmw-pks-pipeline-store",
-		"kubeconfig-folder":        "pks-networking-kubeconfigs",
-		"pks-lock-branch":          "master",
-		"pks-lock-pool":            "nsx",
+		"kubeconfig-path":          "pks-networking-kubeconfigs/kubeconfig-(.*).tgz",
 		"pks-nsx-t-release-branch": "ci-improvements-proto",
+		"lock-name":                "", // required
 	},
 }
 
 func ValidateProfileTypes(t string) error {
-	switch t {
-	case deployKuboProfileType:
-		return nil
-	default:
-		return errors.New(fmt.Sprintf("%s profile type is not supported", t))
+	_, ok := profileRegistry[t]
+	if !ok {
+		return errors.New(fmt.Sprintf("%s profile type is not supported in profile registry", t))
+	}
+	_, ok = profileOutputRegistry[t]
+	if !ok {
+		return errors.New(fmt.Sprintf("%s profile type is not supported in profile output registry", t))
 	}
 	return nil
 }
 
 var profileOutputRegistry map[string]templates.PipelineFetchOutputFunc = map[string]templates.PipelineFetchOutputFunc{
-	deployKuboProfileType: templates.DeployKuboPipelineFetchOutputFunc,
+	deployKuboProfileType:         templates.DeployKuboPipelineFetchOutputFunc,
+	nsxAcceptanceTestsProfileType: templates.NsxAcceptanceTestsPipelineFetchOutputFunc,
 }

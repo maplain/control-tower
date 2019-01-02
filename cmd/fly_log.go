@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,47 +17,39 @@ package cmd
 import (
 	"os"
 
-	"github.com/maplain/control-tower/pkg/config"
+	"github.com/concourse/fly/rc"
+	"github.com/maplain/control-tower/pkg/concourseclient"
 	cterror "github.com/maplain/control-tower/pkg/error"
-	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
 )
 
-const (
-	EmptyProfileDeleteNameError = cterror.Error("name can not be empty")
-)
-
 var (
-	profileDeleteName string
+	logCmdBuildID string
 )
 
-// deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "delete a profile",
+// logCmd represents the log command
+var logCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "fetch the logs of a job build",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := profileDeleteValidate()
+		err := logCmdValidate()
 		cterror.Check(err)
 
-		filepath, err := config.GetProfilePath(profileDeleteName)
+		cli, err := concourseclient.NewConcourseClient(rc.TargetName(flyTarget))
 		cterror.Check(err)
 
-		if !io.NotExist(filepath) {
-			err = os.Remove(filepath)
-			cterror.Check(err)
-		}
+		err = cli.ReadBuildLog(logCmdBuildID, os.Stdout)
+		cterror.Check(err)
 	},
 }
 
-func profileDeleteValidate() error {
-	if profileDeleteName == "" {
-		return EmptyProfileDeleteNameError
-	}
+func logCmdValidate() error {
 	return nil
 }
 
 func init() {
-	profileCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringVarP(&profileDeleteName, "name", "n", "", "name of the profile")
-	deployCmd.MarkFlagRequired("name")
+	flyCmd.AddCommand(logCmd)
+
+	logCmd.Flags().StringVarP(&logCmdBuildID, "id", "i", "", "build id")
+	logCmd.MarkFlagRequired("id")
 }

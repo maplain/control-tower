@@ -99,6 +99,7 @@ func (v Values) GetInt(key string) (int, error) {
 func InteractivePopulateStringValues(inputs Values) Values {
 	reader := bufio.NewReader(os.Stdin)
 	for name, value := range inputs {
+	Setvalue:
 		if value != "" {
 			fmt.Printf("type in the value for %s (type Enter to use default: %s)\n", name, value)
 		} else {
@@ -108,6 +109,9 @@ func InteractivePopulateStringValues(inputs Values) Values {
 		v = strings.TrimSpace(v)
 		if v != "" {
 			inputs[name] = v
+		}
+		if v == "" && value == "" {
+			goto Setvalue
 		}
 	}
 	return inputs
