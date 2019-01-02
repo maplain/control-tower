@@ -30,8 +30,14 @@ var (
 // contextViewCmd represents the view command
 var contextViewCmd = &cobra.Command{
 	Use:   "view",
-	Short: "view a specific context",
+	Short: "view a specific context. if name is not provided, view in use context",
 	Run: func(cmd *cobra.Command, args []string) {
+		if contextViewName == "" {
+			_, name, err := config.LoadInUseContext()
+			cterror.Check(err)
+
+			contextViewName = name
+		}
 		ctx, err := config.LoadContext(contextViewName)
 		cterror.Check(err)
 
@@ -46,5 +52,4 @@ func init() {
 	contextCmd.AddCommand(contextViewCmd)
 
 	contextViewCmd.Flags().StringVarP(&contextViewName, "name", "n", "", "name of the context")
-	contextViewCmd.MarkFlagRequired("name")
 }

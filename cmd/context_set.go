@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	contextSetCmdName string
+	ContextSetCmdParameterMissingError = cterror.Error("context name parameter is missing")
 )
 
 // contextSetCmd represents the create command
@@ -31,9 +31,10 @@ var contextSetCmd = &cobra.Command{
 	Use:   "set",
 	Short: "use a fly context",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := contextSetValidate()
-		cterror.Check(err)
-
+		if len(args) == 0 {
+			cterror.Check(ContextSetCmdParameterMissingError)
+		}
+		contextSetCmdName := args[0]
 		ctx, err := config.LoadContexts()
 		cterror.Check(err)
 
@@ -58,12 +59,6 @@ var contextSetCmd = &cobra.Command{
 	},
 }
 
-func contextSetValidate() error {
-	return nil
-}
-
 func init() {
 	contextCmd.AddCommand(contextSetCmd)
-	contextSetCmd.Flags().StringVarP(&contextSetCmdName, "name", "n", "", "context name")
-	contextSetCmd.MarkFlagRequired("name")
 }

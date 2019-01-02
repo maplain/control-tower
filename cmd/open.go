@@ -27,10 +27,20 @@ var openCmd = &cobra.Command{
 	Use:   "open",
 	Short: "open in use fly context",
 	Run: func(cmd *cobra.Command, args []string) {
+		var c config.Context
 		ctx, name, err := config.LoadInUseContext()
 		cterror.Check(err)
 
-		c := ctx.Contexts[name]
+		if len(args) == 0 {
+			c = ctx.Contexts[name]
+		} else {
+			var ok bool
+			c, ok = ctx.Contexts[args[0]]
+			if !ok {
+				cterror.Check(config.ContextNotFound)
+			}
+		}
+
 		u, err := concourseclient.GetPipelineURL(c.Target, c.Pipeline)
 		cterror.Check(err)
 
