@@ -2,6 +2,7 @@ package concourseclient
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/concourse/atc"
@@ -10,6 +11,7 @@ import (
 	"github.com/concourse/go-concourse/concourse"
 
 	cterror "github.com/maplain/control-tower/pkg/error"
+	client "github.com/maplain/control-tower/pkg/flyclient"
 )
 
 const (
@@ -128,4 +130,12 @@ func (c *oldCClient) LatestJobBuildIDOnStatus(team, pipeline, job, status string
 		}
 	}
 	return -1, BuildNotFoundError
+}
+
+func GetPipelineURL(target, pipeline string) (string, error) {
+	t, err := client.LoadTarget(target)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/teams/%s/pipelines/%s", t.API, t.TeamName, pipeline), nil
 }

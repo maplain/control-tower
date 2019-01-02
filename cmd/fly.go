@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -24,9 +22,6 @@ import (
 var flyCmd = &cobra.Command{
 	Use:   "fly",
 	Short: "concourse fly complementary utility",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("fly called")
-	},
 }
 
 func init() {

@@ -57,10 +57,11 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 		dcmd := client.NewFlyCmd()
 		if deployTarget != "" {
 			dcmd.WithTarget(rc.TargetName(deployTarget))
-		} else if contextName != "" {
-			ctx, err := config.LoadContext(contextName)
-			cterror.Check(err)
-			dcmd.WithTarget(rc.TargetName(ctx.Target))
+		} else {
+			ctx, name, err := config.LoadInUseContext()
+			if err == nil {
+				dcmd.WithTarget(rc.TargetName(ctx.Contexts[name].Target))
+			}
 		}
 		dcmd.WithSubCommand(setPipelineCmd).
 			WithArg(flyPipelineFlag, pipelineName).

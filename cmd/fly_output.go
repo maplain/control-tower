@@ -47,27 +47,31 @@ var outputCmd = &cobra.Command{
 		target := flyOutputTarget
 		pipelineName := flyOutputPipelineName
 		team := flyOutputTeam
+		pipelineType := flyOutputPipelineType
 
-		if target == "" || pipelineName == "" || team == "" {
-			ctx, err := config.LoadContext(contextName)
-			cterror.Check(err)
+		if target == "" || pipelineName == "" || team == "" || pipelineType == "" {
+			ctx, name, _ := config.LoadInUseContext()
+			c := ctx.Contexts[name]
 			if target == "" {
-				target = ctx.Target
+				target = c.Target
 			}
 			if pipelineName == "" {
-				pipelineName = ctx.Pipeline
+				pipelineName = c.Pipeline
 			}
 			if team == "" {
-				team = ctx.Team
+				team = c.Team
+			}
+			if pipelineType == "" {
+				pipelineType = c.PipelineType
 			}
 		}
 
 		cli, err := concourseclient.NewConcourseClient(rc.TargetName(target))
 		cterror.Check(err)
 
-		err = ValidateProfileTypes(flyOutputPipelineType)
+		err = ValidateProfileTypes(pipelineType)
 		cterror.Check(err)
-		outputFunc := profileOutputRegistry[flyOutputPipelineType]
+		outputFunc := profileOutputRegistry[pipelineType]
 		output, err := outputFunc(team, pipelineName, cli)
 		cterror.Check(err)
 
@@ -80,15 +84,20 @@ var outputCmd = &cobra.Command{
 }
 
 func flyOutputCmdValidate() error {
-	if flyOutputPipelineName == "" || flyOutputTarget == "" || flyOutputTeam == "" {
-		if contextName != "" {
-			_, err := config.LoadContext(contextName)
-			if err != nil {
-				return FlyOutputParameterMissingError
-			} else {
+	err := rootValidate()
+	if err != nil {
+		if err == config.ContextNotSetError {
+			if flyOutputPipelineName != "" && flyOutputTarget != "" && flyOutputTeam != "" && flyOutputPipelineType != "" {
 				return nil
+			} else {
+				return FlyOutputParameterMissingError
 			}
-		} else {
+		}
+		return err
+	}
+	if flyOutputPipelineType == "" {
+		ctx, name, _ := config.LoadInUseContext()
+		if ctx.Contexts[name].Target == "" {
 			return FlyOutputParameterMissingError
 		}
 	}
@@ -98,9 +107,8 @@ func flyOutputCmdValidate() error {
 func init() {
 	flyCmd.AddCommand(outputCmd)
 
-	outputCmd.Flags().StringVarP(&flyOutputPipelineType, "type", "p", "", "type of the pipeline")
+	outputCmd.Flags().StringVar(&flyOutputPipelineType, "type", "", "type of the pipeline")
 	outputCmd.Flags().StringVarP(&flyOutputPipelineName, "pipeline-name", "n", "", "name of the pipeline")
 	outputCmd.Flags().StringVarP(&flyOutputTeam, "team", "m", "", "team that owns the pipeline")
 	outputCmd.Flags().StringVarP(&flyOutputTarget, "target", "t", "", "concourse target")
-	outputCmd.MarkFlagRequired("type")
 }

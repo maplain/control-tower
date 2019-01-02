@@ -15,30 +15,55 @@
 package cmd
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
-	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
 )
 
-// contextListCmd represents the create command
-var contextListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "list all fly contexts",
+var (
+	contextSetCmdName string
+)
+
+// contextSetCmd represents the create command
+var contextSetCmd = &cobra.Command{
+	Use:   "set",
+	Short: "use a fly context",
 	Run: func(cmd *cobra.Command, args []string) {
+		err := contextSetValidate()
+		cterror.Check(err)
+
 		ctx, err := config.LoadContexts()
 		cterror.Check(err)
 
-		var data [][]string
-		for name, c := range ctx.Contexts {
-			data = append(data, []string{name, strconv.FormatBool(c.InUse)})
+		_, ok := ctx.Contexts[contextSetCmdName]
+		if !ok {
+			cterror.Check(config.ContextNotFound)
 		}
-		io.WriteTable(data, []string{"Name", "Use"})
+		// mutual exclusive
+		for key, v := range ctx.Contexts {
+			if key == contextSetCmdName {
+				v.InUse = true
+				ctx.Contexts[key] = v
+			} else {
+				v.InUse = false
+				ctx.Contexts[key] = v
+			}
+		}
+
+		err = config.SaveContexts(ctx)
+		cterror.Check(err)
+		fmt.Printf("current context is set to %s\n", contextSetCmdName)
 	},
 }
 
+func contextSetValidate() error {
+	return nil
+}
+
 func init() {
-	contextCmd.AddCommand(contextListCmd)
+	contextCmd.AddCommand(contextSetCmd)
+	contextSetCmd.Flags().StringVarP(&contextSetCmdName, "name", "n", "", "context name")
+	contextSetCmd.MarkFlagRequired("name")
 }

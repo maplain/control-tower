@@ -14,6 +14,8 @@ import (
 const (
 	flyBinaryName        = "fly"
 	flyConfigurationFile = ".flyrc"
+
+	TargetNotFoundError = cterror.Error("target not found")
 )
 
 type Cmd struct {
@@ -77,42 +79,42 @@ func (c *Cmd) Run() error {
 	return nil
 }
 
-func NewFlyClient() *Client {
+func NewFlyClient() (*Client, error) {
 	res := &Client{}
 	path, err := io.BinaryPath(flyBinaryName)
 	if err != nil {
-		cterror.Check(errors.New(fmt.Sprintf("%s doesn't exist on your $PATH. install it before your use", flyBinaryName)))
+		return res, errors.New(fmt.Sprintf("%s doesn't exist on your $PATH. install it before your use", flyBinaryName))
 	}
 	targets, err := rc.LoadTargets()
 	if err != nil {
-		cterror.Check(err)
+		return res, err
 	}
 	res.path = path
 	res.targets = targets.Targets
-	return res
+	return res, nil
 }
 
-// func InitializeTargetsFromCfg() (Targets, error) {
-// 	// Find home directory.
-// 	home, err := homedir.Dir()
-// 	if err != nil {
-// 		return Targets{}, err
-// 	}
-//
-// 	flyCfg := path.Join(home, flyConfigurationFile)
-// 	if !io.NotExist(flyCfg) {
-// 		d, err := io.ReadFromFile(flyCfg)
-// 		cterror.Check(err)
-//
-// 		targets := Targets{}
-// 		err = yaml.Unmarshal(d, &targets)
-// 		cterror.Check(err)
-//
-// 		return targets, nil
-// 	}
-// 	return Targets{}, errors.New(fmt.Sprintf("could not find %s", flyCfg))
-// }
-//
+func LoadTargets() (Targets, error) {
+	res := make(map[rc.TargetName]rc.TargetProps)
+	targets, err := rc.LoadTargets()
+	if err != nil {
+		return Targets(res), err
+	}
+	res = targets.Targets
+	return Targets(res), nil
+}
+
+func LoadTarget(name string) (rc.TargetProps, error) {
+	targets, err := LoadTargets()
+	if err != nil {
+		return rc.TargetProps{}, err
+	}
+	t, ok := targets[rc.TargetName(name)]
+	if !ok {
+		return rc.TargetProps{}, TargetNotFoundError
+	}
+	return t, nil
+}
 
 func (c *Client) Targets() []rc.TargetName {
 	var names []rc.TargetName

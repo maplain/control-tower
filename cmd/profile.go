@@ -49,12 +49,12 @@ func init() {
 }
 
 const (
-	deployKuboProfileType         = "deploy-kubo"
-	nsxAcceptanceTestsProfileType = "nsx-acceptance-tests"
+	DeployKuboProfileType         = "deploy-kubo"
+	NsxAcceptanceTestsProfileType = "nsx-acceptance-tests"
 )
 
 var profileRegistry map[string]io.Values = map[string]io.Values{
-	deployKuboProfileType: map[string]string{
+	DeployKuboProfileType: map[string]string{
 		"kubeconfig-bucket":                "vmw-pks-pipeline-store",
 		"kubeconfig-folder":                "pks-networking-kubeconfigs",
 		"pks-lock-branch":                  "master",
@@ -63,7 +63,7 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 		"pks-nsx-t-release-tarball-bucket": "vmw-pks-pipeline-store",
 		"pks-nsx-t-release-tarball-path":   "pks-nsx-t/pks-nsx-t-(.*).tgz",
 	},
-	nsxAcceptanceTestsProfileType: map[string]string{
+	NsxAcceptanceTestsProfileType: map[string]string{
 		"kubeconfig-bucket":        "vmw-pks-pipeline-store",
 		"kubeconfig-path":          "pks-networking-kubeconfigs/kubeconfig-(.*).tgz",
 		"pks-nsx-t-release-branch": "ci-improvements-proto",
@@ -74,16 +74,16 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 func ValidateProfileTypes(t string) error {
 	_, ok := profileRegistry[t]
 	if !ok {
-		return errors.New(fmt.Sprintf("%s profile type is not supported in profile registry", t))
+		return errors.New(fmt.Sprintf("%s type is not supported in pipeline profile registry", t))
 	}
 	_, ok = profileOutputRegistry[t]
 	if !ok {
-		return errors.New(fmt.Sprintf("%s profile type is not supported in profile output registry", t))
+		return errors.New(fmt.Sprintf("%s type is not supported in pipeline profile output registry", t))
 	}
 	return nil
 }
 
 var profileOutputRegistry map[string]templates.PipelineFetchOutputFunc = map[string]templates.PipelineFetchOutputFunc{
-	deployKuboProfileType:         templates.DeployKuboPipelineFetchOutputFunc,
-	nsxAcceptanceTestsProfileType: templates.NsxAcceptanceTestsPipelineFetchOutputFunc,
+	DeployKuboProfileType:         templates.DeployKuboPipelineFetchOutputFunc,
+	NsxAcceptanceTestsProfileType: templates.NsxAcceptanceTestsPipelineFetchOutputFunc,
 }
