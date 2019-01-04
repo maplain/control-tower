@@ -218,6 +218,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/skratchdot/open-golang"
   packages = ["open"]
@@ -364,6 +370,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5018f378abe104794cbba86b97ffdb2ba99c39319c84253a16c23fe37dea351e"
+  inputs-digest = "256d6d452a03466db745476bbebf305aaf8e3e0a63b9ad08fcd00f14642fb015"
   solver-name = "gps-cdcl"
   solver-version = 1
