@@ -43,6 +43,14 @@ resources:
     branch: ((pks-nsx-t-release-branch))
     private_key: ((gitlab-private-key))
 
+# pks-concourse git repo
+- name: pks-concourse
+  type: git
+  source:
+    uri: git@gitlab.eng.vmware.com:PKS/pks-concourse.git
+    branch: master
+    private_key: ((pks-concourse-private-key))
+
 # pks-nsx-t-release version
 - name: pks-nsx-t-version
   type: semver
@@ -131,6 +139,7 @@ groups:
       - deploy-kubo-release-lock
       - delete-kubo
       - delete-kubo-release-lock
+      - outputs
 
   - name: dev
     jobs:
@@ -138,6 +147,7 @@ groups:
       - run-precheck
       - deploy-kubo
       - delete-kubo
+      - outputs
 
   - name: maintenance
     jobs:
@@ -162,7 +172,7 @@ jobs:
 
   - put: pks-lock
     params:
-      acquire: true
+      claim: nsx3
 
   
   on_failure:
@@ -233,15 +243,27 @@ jobs:
 
 
 - name: deploy-kubo-release-lock
-  serial: true
-  serial_groups:
-    - deploy-kubo
   plan:
   - get: pks-lock
-    passed: [ 'run-precheck' ]
+    passed: [ 'deploy-kubo' ]
   - put: pks-lock
     params:
       release: pks-lock
+
+- name: outputs
+  plan:
+  - aggregate:
+    - get: pks-lock
+      passed: [ 'deploy-kubo' ]
+      trigger: true
+    - get: kubeconfig
+      passed: [ 'deploy-kubo' ]
+      trigger: true
+    - get: pks-concourse
+      trigger: true
+  - task: outputs
+    file: pks-concourse/tasks/deploy-kubo-outputs.yml
+
 
 - name: deploy-kubo
   serial: true
@@ -335,8 +357,6 @@ jobs:
       - color: good
         text: $BUILD_PIPELINE_NAME build succeeded <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
 
-
-# Run release tests
 - name: delete-kubo
   serial: true
   serial_groups:

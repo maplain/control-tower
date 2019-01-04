@@ -217,6 +217,7 @@ jobs:
       PKS_CLI_PASSWORD: password1
       NETWORK_AUTOMATION: false
       MULTI_MASTER: false
+      LOCK_VERSION: v1
 
 - name: run-conformance-tests-release-lock
   plan:
