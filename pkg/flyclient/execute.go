@@ -19,9 +19,9 @@ import (
 	"github.com/maplain/control-tower/pkg/flyclient/flaghelpers"
 )
 
-func Execute(taskPath, target, pipeline, job string, outputs []flaghelpers.OutputPairFlag) error {
+func Execute(taskConfig, target, pipeline, job string, outputs []flaghelpers.OutputPairFlag) error {
 	cmd := ExecuteCommand{
-		TaskConfig: atc.PathFlag(taskPath),
+		TaskConfig: taskConfig,
 		InputsFrom: flaghelpers.JobFlag{pipeline, job},
 		Outputs:    outputs,
 	}
@@ -29,13 +29,13 @@ func Execute(taskPath, target, pipeline, job string, outputs []flaghelpers.Outpu
 }
 
 type ExecuteCommand struct {
-	TaskConfig     atc.PathFlag                 `short:"c" long:"config" required:"true"                description:"The task config to execute"`
-	Privileged     bool                         `short:"p" long:"privileged"                            description:"Run the task with full privileges"`
-	IncludeIgnored bool                         `          long:"include-ignored"                       description:"Including .gitignored paths. Disregards .gitignore entries and uploads everything"`
-	Inputs         []flaghelpers.InputPairFlag  `short:"i" long:"input"       value-name:"NAME=PATH"    description:"An input to provide to the task (can be specified multiple times)"`
-	InputsFrom     flaghelpers.JobFlag          `short:"j" long:"inputs-from" value-name:"PIPELINE/JOB" description:"A job to base the inputs on"`
-	Outputs        []flaghelpers.OutputPairFlag `short:"o" long:"output"      value-name:"NAME=PATH"    description:"An output to fetch from the task (can be specified multiple times)"`
-	Tags           []string                     `          long:"tag"         value-name:"TAG"          description:"A tag for a specific environment (can be specified multiple times)"`
+	TaskConfig     string
+	Privileged     bool
+	IncludeIgnored bool
+	Inputs         []flaghelpers.InputPairFlag
+	InputsFrom     flaghelpers.JobFlag
+	Outputs        []flaghelpers.OutputPairFlag
+	Tags           []string
 }
 
 func (command *ExecuteCommand) Execute(t string, args []string) error {
@@ -52,7 +52,7 @@ func (command *ExecuteCommand) Execute(t string, args []string) error {
 	taskConfigFile := command.TaskConfig
 	includeIgnored := command.IncludeIgnored
 
-	taskConfig, err := config.LoadTaskConfig(string(taskConfigFile), args)
+	taskConfig, err := config.LoadTaskConfig(taskConfigFile, args)
 	if err != nil {
 		return err
 	}
