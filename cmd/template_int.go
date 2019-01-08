@@ -17,39 +17,30 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
+	"github.com/maplain/control-tower/templates"
 	"github.com/spf13/cobra"
 )
 
 var (
-	contextDeleteName string
+	templateIntTemplatePath string
+	templateIntVarPaths     []string
 )
 
-// contextDeleteCmd represents the view command
-var contextDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "delete a specific context",
+var templateIntCmd = &cobra.Command{
+	Use:   "int",
+	Short: "prints out required keys for a template",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, err := config.LoadContexts()
+		res, err := templates.Interpolate(templateIntTemplatePath, templateIntVarPaths)
 		cterror.Check(err)
 
-		_, ok := ctx.Contexts[contextDeleteName]
-		if !ok {
-			fmt.Printf("context %s does not exist\n", contextDeleteName)
-			return
-		}
-
-		delete(ctx.Contexts, contextDeleteName)
-		err = config.SaveContexts(ctx)
-		cterror.Check(err)
-		fmt.Printf("context %s is deleted successfully\n", contextDeleteName)
+		fmt.Printf("%s", res)
 	},
 }
 
 func init() {
-	contextCmd.AddCommand(contextDeleteCmd)
-
-	contextDeleteCmd.Flags().StringVarP(&contextDeleteName, "name", "n", "", "name of the context")
-	contextDeleteCmd.MarkFlagRequired("name")
+	templateCmd.AddCommand(templateIntCmd)
+	templateIntCmd.Flags().StringVarP(&templateIntTemplatePath, "template", "t", "", "template file you want to interpolate")
+	templateIntCmd.Flags().StringSliceVarP(&templateIntVarPaths, "load-vars-from", "l", templateIntVarPaths, "key value yaml files")
+	templateIntCmd.MarkFlagRequired("template")
 }

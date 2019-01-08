@@ -18,14 +18,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// logCmd represents the log command
-var flyExecuteCmd = &cobra.Command{
-	Use:   "execute",
-	Short: "execute a fly task",
-	Run: func(cmd *cobra.Command, args []string) {
-	},
+// templateCmd represents the template command
+var templateCmd = &cobra.Command{
+	Use:   "template",
+	Short: "manages templates",
 }
 
 func init() {
-	flyCmd.AddCommand(flyExecuteCmd)
+	rootCmd.AddCommand(templateCmd)
 }

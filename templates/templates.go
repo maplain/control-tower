@@ -1,19 +1,64 @@
 package templates
 
 import (
-	"errors"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/concourse/atc"
 	"github.com/maplain/control-tower/pkg/concourseclient"
+	client "github.com/maplain/control-tower/pkg/flyclient"
+	"github.com/pkg/errors"
+)
+
+const (
+	ArtifactsOutputVolume = "artifacts"
+	ArtifactsJobName      = "outputs"
+
+	deployKuboArtifactsTaskConfig = `
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: gcr.io/eminent-nation-87317/pks-ci
+    tag: stable
+run:
+  path: pks-concourse/scripts/deploy-kubo-outputs.sh
+
+inputs:
+- name: pks-lock
+- name: kubeconfig
+- name: pks-concourse
+outputs:
+- name: artifacts
+`
 )
 
 type PipelineFetchOutputFunc func(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error)
+type PipelineGetArtifactsFunc func(target, pipeline string) (string, error)
 type PipelineOutput map[string]string
 
+var DeployKuboPipelineGetArtifactsFunc = PipelineGetArtifactsFunc(deployKuboPipelineGetArtifacts)
 var DeployKuboPipelineFetchOutputFunc = PipelineFetchOutputFunc(deployKuboPipelineOutput)
 var NsxAcceptanceTestsPipelineFetchOutputFunc = PipelineFetchOutputFunc(nsxAcceptanceTestsPipelineOutput)
+
+func deployKuboPipelineGetArtifacts(target, pipeline string) (string, error) {
+	dir, err := ioutil.TempDir("", "fly")
+	if err != nil {
+		return "", errors.Wrap(err, "can not get artifacts for deploy-kubo type pipeline")
+	}
+	outputs := []client.OutputPair{
+		client.OutputPair{
+			Name: ArtifactsOutputVolume,
+			Path: dir,
+		},
+	}
+	err = client.Execute(deployKuboArtifactsTaskConfig, target, pipeline, ArtifactsJobName, outputs)
+	if err != nil {
+		return "", errors.WithMessage(errors.Wrap(err, "can not get artifacts for deploy-kubo type pipeline"), pipeline)
+	}
+	return dir, nil
+}
 
 // deploy-kubo template specific logic
 func deployKuboPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error) {

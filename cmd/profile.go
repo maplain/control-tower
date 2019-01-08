@@ -15,9 +15,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/pkg/errors"
+
+	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/maplain/control-tower/templates"
 	"github.com/spf13/cobra"
@@ -51,6 +53,8 @@ func init() {
 const (
 	DeployKuboProfileType         = "deploy-kubo"
 	NsxAcceptanceTestsProfileType = "nsx-acceptance-tests"
+
+	TypeNotSupportedError = cterror.Error("pipeline type is not supported")
 )
 
 var profileRegistry map[string]io.Values = map[string]io.Values{
@@ -59,9 +63,10 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 		"kubeconfig-folder":                "pks-networking-kubeconfigs",
 		"pks-lock-branch":                  "master",
 		"pks-lock-pool":                    "nsx",
-		"pks-nsx-t-release-branch":         "ci-improvements-proto",
+		"pks-nsx-t-release-branch":         "master",
 		"pks-nsx-t-release-tarball-bucket": "vmw-pks-pipeline-store",
 		"pks-nsx-t-release-tarball-path":   "pks-nsx-t/pks-nsx-t-(.*).tgz",
+		"lock-name":                        "", // required
 	},
 	NsxAcceptanceTestsProfileType: map[string]string{
 		"kubeconfig-bucket":        "vmw-pks-pipeline-store",
@@ -74,11 +79,11 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 func ValidateProfileTypes(t string) error {
 	_, ok := profileRegistry[t]
 	if !ok {
-		return errors.New(fmt.Sprintf("%s type is not supported in pipeline profile registry", t))
+		return errors.WithMessage(errors.Wrap(TypeNotSupportedError, "in profile registry"), t)
 	}
 	_, ok = profileOutputRegistry[t]
 	if !ok {
-		return errors.New(fmt.Sprintf("%s type is not supported in pipeline profile output registry", t))
+		return errors.WithMessage(errors.Wrap(TypeNotSupportedError, "in output registry"), t)
 	}
 	return nil
 }
@@ -86,4 +91,8 @@ func ValidateProfileTypes(t string) error {
 var profileOutputRegistry map[string]templates.PipelineFetchOutputFunc = map[string]templates.PipelineFetchOutputFunc{
 	DeployKuboProfileType:         templates.DeployKuboPipelineFetchOutputFunc,
 	NsxAcceptanceTestsProfileType: templates.NsxAcceptanceTestsPipelineFetchOutputFunc,
+}
+
+var profileArtifactsRegistry map[string]templates.PipelineGetArtifactsFunc = map[string]templates.PipelineGetArtifactsFunc{
+	DeployKuboProfileType: templates.DeployKuboPipelineGetArtifactsFunc,
 }

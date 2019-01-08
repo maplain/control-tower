@@ -1,4 +1,4 @@
-// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,34 +22,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	contextDeleteName string
-)
-
-// contextDeleteCmd represents the view command
-var contextDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "delete a specific context",
+// flyArtifactsCmd represents the fly artifacts command
+var flyArtifactsCmd = &cobra.Command{
+	Use:   "artifacts",
+	Short: "get the artifacts of a pipeline",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, err := config.LoadContexts()
+		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
 
-		_, ok := ctx.Contexts[contextDeleteName]
-		if !ok {
-			fmt.Printf("context %s does not exist\n", contextDeleteName)
-			return
-		}
-
-		delete(ctx.Contexts, contextDeleteName)
-		err = config.SaveContexts(ctx)
+		inuseContext := ctx.Contexts[c]
+		err = ValidateProfileTypes(inuseContext.PipelineType)
 		cterror.Check(err)
-		fmt.Printf("context %s is deleted successfully\n", contextDeleteName)
+
+		artifactsFunc := profileArtifactsRegistry[inuseContext.PipelineType]
+		dir, err := artifactsFunc(inuseContext.Target, inuseContext.Pipeline)
+		fmt.Printf("ls -al %s to check your downloaded artifacts\n", dir)
+		cterror.Check(err)
 	},
 }
 
 func init() {
-	contextCmd.AddCommand(contextDeleteCmd)
-
-	contextDeleteCmd.Flags().StringVarP(&contextDeleteName, "name", "n", "", "name of the context")
-	contextDeleteCmd.MarkFlagRequired("name")
+	flyCmd.AddCommand(flyArtifactsCmd)
 }

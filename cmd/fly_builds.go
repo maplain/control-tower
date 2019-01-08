@@ -15,41 +15,27 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/concourse/fly/rc"
+	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/spf13/cobra"
 )
 
-var (
-	contextDeleteName string
-)
-
-// contextDeleteCmd represents the view command
-var contextDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "delete a specific context",
+var flyBuildsCmd = &cobra.Command{
+	Use: "jobs",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, err := config.LoadContexts()
+		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
 
-		_, ok := ctx.Contexts[contextDeleteName]
-		if !ok {
-			fmt.Printf("context %s does not exist\n", contextDeleteName)
-			return
-		}
+		inusectx := ctx.Contexts[c]
 
-		delete(ctx.Contexts, contextDeleteName)
-		err = config.SaveContexts(ctx)
+		_, err = concourseclient.NewConcourseClient(rc.TargetName(inusectx.Target))
+		//cli.Team().JobBuilds(pipelineName string, jobName string, page Page) ([]atc.Build, Pagination, bool, error)
 		cterror.Check(err)
-		fmt.Printf("context %s is deleted successfully\n", contextDeleteName)
 	},
 }
 
 func init() {
-	contextCmd.AddCommand(contextDeleteCmd)
-
-	contextDeleteCmd.Flags().StringVarP(&contextDeleteName, "name", "n", "", "name of the context")
-	contextDeleteCmd.MarkFlagRequired("name")
+	flyCmd.AddCommand(flyBuildsCmd)
 }
