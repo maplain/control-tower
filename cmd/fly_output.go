@@ -21,6 +21,7 @@ import (
 	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
+	"github.com/maplain/control-tower/templates"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -34,6 +35,7 @@ var (
 	flyOutputPipelineName string
 	flyOutputTeam         string
 	flyOutputTarget       string
+	flyOutputJobStatus    string
 )
 
 // outputCmd represents the output command
@@ -72,7 +74,9 @@ var outputCmd = &cobra.Command{
 		err = ValidateProfileTypes(pipelineType)
 		cterror.Check(err)
 		outputFunc := profileOutputRegistry[pipelineType]
-		output, err := outputFunc(team, pipelineName, cli)
+		outputArgs := templates.Args(map[string]interface{}{})
+		outputArgs[templates.JobStatusArgKey] = flyOutputJobStatus
+		output, err := outputFunc(team, pipelineName, cli, outputArgs)
 		cterror.Check(err)
 
 		d, err := yaml.Marshal(&output)
@@ -111,4 +115,5 @@ func init() {
 	outputCmd.Flags().StringVarP(&flyOutputPipelineName, "pipeline-name", "n", "", "name of the pipeline")
 	outputCmd.Flags().StringVarP(&flyOutputTeam, "team", "m", "", "team that owns the pipeline")
 	outputCmd.Flags().StringVarP(&flyOutputTarget, "target", "t", "", "concourse target")
+	outputCmd.Flags().StringVar(&flyOutputJobStatus, "job-status", "succeeded", "expected job status")
 }

@@ -2,7 +2,6 @@ package concourseclient
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 
@@ -22,6 +21,7 @@ const (
 	TargetNotFoundError  = cterror.Error("target is not found")
 	BuildNotFoundError   = cterror.Error("build not found")
 	NotEventLogTypeError = cterror.Error("not a log type event")
+	NoAvailableJobsError = cterror.Error("no available jobs")
 )
 
 // ConcourseClient interface is a combination of original go-concourse Client
@@ -126,7 +126,7 @@ func (c *oldCClient) LatestJobBuildIDOnStatus(team, pipeline, job, status string
 			}
 		}
 		if pagination.Next == nil {
-			return -1, errors.New("no available jobs")
+			return -1, NoAvailableJobsError
 		}
 		builds, pagination, ifpagination, err = t.JobBuilds(pipeline, job, *pagination.Next)
 		if err != nil {

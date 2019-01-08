@@ -15,6 +15,8 @@ const (
 	ArtifactsOutputVolume = "artifacts"
 	ArtifactsJobName      = "outputs"
 
+	JobStatusArgKey = "status"
+
 	deployKuboArtifactsTaskConfig = `
 platform: linux
 image_resource:
@@ -34,7 +36,13 @@ outputs:
 `
 )
 
-type PipelineFetchOutputFunc func(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error)
+type Args map[string]interface{}
+
+func (a Args) Add(key string, value interface{}) {
+	a[key] = value
+}
+
+type PipelineFetchOutputFunc func(team, pipeline string, cli concourseclient.ConcourseClient, args Args) (PipelineOutput, error)
 type PipelineGetArtifactsFunc func(target, pipeline string) (string, error)
 type PipelineOutput map[string]string
 
@@ -61,10 +69,20 @@ func deployKuboPipelineGetArtifacts(target, pipeline string) (string, error) {
 }
 
 // deploy-kubo template specific logic
-func deployKuboPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error) {
+func deployKuboPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient, args Args) (PipelineOutput, error) {
 	res := make(map[string]string)
 
-	id, err := cli.LatestJobBuildIDOnStatus(team, pipeline, "deploy-kubo", string(atc.StatusSucceeded))
+	status := string(atc.StatusSucceeded)
+	for k, v := range args {
+		if k == "status" {
+			vs, ok := v.(string)
+			if ok {
+				status = vs
+			}
+		}
+	}
+
+	id, err := cli.LatestJobBuildIDOnStatus(team, pipeline, "deploy-kubo", status)
 	if err != nil {
 		return PipelineOutput(res), err
 	}
@@ -102,7 +120,7 @@ func deployKuboPipelineOutput(team, pipeline string, cli concourseclient.Concour
 }
 
 // nsx-acceptance-tests template specific logic
-func nsxAcceptanceTestsPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient) (PipelineOutput, error) {
+func nsxAcceptanceTestsPipelineOutput(team, pipeline string, cli concourseclient.ConcourseClient, args Args) (PipelineOutput, error) {
 	res := make(map[string]string)
 	build, err := cli.LatestJobBuild(team, pipeline, "run-release-tests")
 	if err != nil {
