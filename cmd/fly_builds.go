@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,32 +15,27 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/concourse/fly/rc"
+	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/spf13/cobra"
 )
 
-// flyArtifactsCmd represents the fly artifacts command
-var flyArtifactsCmd = &cobra.Command{
-	Use:   "artifacts",
-	Short: "get the artifacts of a pipeline",
+var flyBuildsCmd = &cobra.Command{
+	Use: "jobs",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
 
-		inuseContext := ctx.Contexts[c]
-		err = ValidateProfileTypes(inuseContext.PipelineType)
-		cterror.Check(err)
+		inusectx := ctx.Contexts[c]
 
-		artifactsFunc := profileArtifactsRegistry[inuseContext.PipelineType]
-		dir, err := artifactsFunc(inuseContext.Target, inuseContext.Pipeline)
-		fmt.Printf("ls -al %s to check your downloaded artifacts\n", dir)
+		_, err = concourseclient.NewConcourseClient(rc.TargetName(inusectx.Target))
+		//cli.Team().JobBuilds(pipelineName string, jobName string, page Page) ([]atc.Build, Pagination, bool, error)
 		cterror.Check(err)
 	},
 }
 
 func init() {
-	flyCmd.AddCommand(flyArtifactsCmd)
+	flyCmd.AddCommand(flyBuildsCmd)
 }

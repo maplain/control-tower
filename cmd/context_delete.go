@@ -36,6 +36,7 @@ var contextDeleteCmd = &cobra.Command{
 
 		_, ok := ctx.Contexts[contextDeleteName]
 		if !ok {
+			fmt.Printf("context %s does not exist\n", contextDeleteName)
 			return
 		}
 

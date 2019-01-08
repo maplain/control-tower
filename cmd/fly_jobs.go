@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,32 +15,44 @@
 package cmd
 
 import (
-	"fmt"
+	"strconv"
 
+	"github.com/concourse/atc"
+	"github.com/concourse/fly/rc"
+	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
+	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
 )
 
-// flyArtifactsCmd represents the fly artifacts command
-var flyArtifactsCmd = &cobra.Command{
-	Use:   "artifacts",
-	Short: "get the artifacts of a pipeline",
+var flyJobsCmd = &cobra.Command{
+	Use: "jobs",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
 
-		inuseContext := ctx.Contexts[c]
-		err = ValidateProfileTypes(inuseContext.PipelineType)
+		inusectx := ctx.Contexts[c]
+
+		cli, err := concourseclient.NewConcourseClient(rc.TargetName(inusectx.Target))
 		cterror.Check(err)
 
-		artifactsFunc := profileArtifactsRegistry[inuseContext.PipelineType]
-		dir, err := artifactsFunc(inuseContext.Target, inuseContext.Pipeline)
-		fmt.Printf("ls -al %s to check your downloaded artifacts\n", dir)
+		jobs, err := cli.Team().ListJobs(inusectx.Pipeline)
 		cterror.Check(err)
+
+		displayJobs(jobs)
 	},
 }
 
+func displayJobs(jobs []atc.Job) {
+	data := [][]string{}
+	for _, job := range jobs {
+		data = append(data, []string{strconv.Itoa(job.ID), job.Name})
+	}
+
+	io.WriteTable(data, []string{"ID", "Name"})
+}
+
 func init() {
-	flyCmd.AddCommand(flyArtifactsCmd)
+	flyCmd.AddCommand(flyJobsCmd)
 }

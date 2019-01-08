@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -9,7 +8,7 @@ import (
 	"github.com/concourse/atc"
 	"github.com/maplain/control-tower/pkg/concourseclient"
 	client "github.com/maplain/control-tower/pkg/flyclient"
-	"github.com/maplain/control-tower/pkg/flyclient/flaghelpers"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -48,13 +47,13 @@ func deployKuboPipelineGetArtifacts(target, pipeline string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "can not get artifacts for deploy-kubo type pipeline")
 	}
-	outputs := []flaghelpers.OutputPairFlag{
-		flaghelpers.OutputPairFlag{
+	outputs := []client.OutputPair{
+		client.OutputPair{
 			Name: ArtifactsOutputVolume,
 			Path: dir,
 		},
 	}
-	err = client.Execute(deployKuboArtifactsTaskConfig, inuseContext.Target, inuseContext.Pipeline, ArtifactsJobName, outputs)
+	err = client.Execute(deployKuboArtifactsTaskConfig, target, pipeline, ArtifactsJobName, outputs)
 	if err != nil {
 		return "", errors.WithMessage(errors.Wrap(err, "can not get artifacts for deploy-kubo type pipeline"), pipeline)
 	}

@@ -63,9 +63,10 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 		"kubeconfig-folder":                "pks-networking-kubeconfigs",
 		"pks-lock-branch":                  "master",
 		"pks-lock-pool":                    "nsx",
-		"pks-nsx-t-release-branch":         "ci-improvements-proto",
+		"pks-nsx-t-release-branch":         "master",
 		"pks-nsx-t-release-tarball-bucket": "vmw-pks-pipeline-store",
 		"pks-nsx-t-release-tarball-path":   "pks-nsx-t/pks-nsx-t-(.*).tgz",
+		"lock-name":                        "", // required
 	},
 	NsxAcceptanceTestsProfileType: map[string]string{
 		"kubeconfig-bucket":        "vmw-pks-pipeline-store",
@@ -78,15 +79,11 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 func ValidateProfileTypes(t string) error {
 	_, ok := profileRegistry[t]
 	if !ok {
-		return errors.Wrap(TypeNotSupportedError, "in profile registry")
+		return errors.WithMessage(errors.Wrap(TypeNotSupportedError, "in profile registry"), t)
 	}
 	_, ok = profileOutputRegistry[t]
 	if !ok {
-		return errors.Wrap(TypeNotSupportedError, "in output registry")
-	}
-	_, ok = profileArtifactsRegistry[t]
-	if !ok {
-		return errors.Wrap(TypeNotSupportedError, "in artifacts registry")
+		return errors.WithMessage(errors.Wrap(TypeNotSupportedError, "in output registry"), t)
 	}
 	return nil
 }
@@ -96,6 +93,6 @@ var profileOutputRegistry map[string]templates.PipelineFetchOutputFunc = map[str
 	NsxAcceptanceTestsProfileType: templates.NsxAcceptanceTestsPipelineFetchOutputFunc,
 }
 
-var profileArtifactsRegistry map[string]template.PipelineGetArtifactsFunc = map[string]templates.PipelineGetArtifactsFunc{
+var profileArtifactsRegistry map[string]templates.PipelineGetArtifactsFunc = map[string]templates.PipelineGetArtifactsFunc{
 	DeployKuboProfileType: templates.DeployKuboPipelineGetArtifactsFunc,
 }

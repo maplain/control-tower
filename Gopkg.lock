@@ -2,10 +2,38 @@
 
 
 [[projects]]
+  name = "github.com/bmatcuk/doublestar"
+  packages = ["."]
+  revision = "85a78806aa1b4707d1dbace9be592cf1ece91ab3"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/bmizerany/pat"
   packages = ["."]
   revision = "6226ea591a40176dd3ff9cd8eff81ed6ca721a00"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/charlievieth/fs"
+  packages = ["."]
+  revision = "7dc373669fa10ddf827c37c595dee30a2f001be9"
+
+[[projects]]
+  name = "github.com/cloudfoundry/bosh-cli"
+  packages = ["director/template"]
+  revision = "891ff634a896de0839feb5a316d7341fb26ed458"
+  version = "v5.4.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/cloudfoundry/bosh-utils"
+  packages = [
+    "errors",
+    "logger",
+    "system"
+  ]
+  revision = "c2cf699102bd7878141b9810117cba777852f1be"
 
 [[projects]]
   name = "github.com/concourse/atc"
@@ -19,8 +47,6 @@
 [[projects]]
   name = "github.com/concourse/fly"
   packages = [
-    "commands/internal/flaghelpers",
-    "config",
     "eventstream",
     "rc",
     "ui",
@@ -28,15 +54,6 @@
   ]
   revision = "79616b2348f39c74b6e3290c585a24a0faac3e3b"
   version = "v4.2.2"
-
-[[projects]]
-  name = "github.com/concourse/go-archive"
-  packages = [
-    "tarfs",
-    "tgzfs"
-  ]
-  revision = "6811738acf1edd0197e799d2dd530a6a57d8a621"
-  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/concourse/go-concourse"
@@ -47,6 +64,12 @@
   ]
   revision = "79a832c54c62c957d666520937ee4a62b1af9efc"
   version = "v4.2.2"
+
+[[projects]]
+  name = "github.com/cppforlife/go-patch"
+  packages = ["patch"]
+  revision = "90228d47281247384683e5fded0f15afa3e5d29a"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -93,18 +116,6 @@
     "json/token"
   ]
   revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
-  version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/hpcloud/tail"
-  packages = [
-    ".",
-    "ratelimiter",
-    "util",
-    "watch",
-    "winfile"
-  ]
-  revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
   version = "v1.0.0"
 
 [[projects]]
@@ -160,50 +171,6 @@
   packages = ["."]
   revision = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970"
   version = "v0.0.1"
-
-[[projects]]
-  name = "github.com/onsi/ginkgo"
-  packages = [
-    ".",
-    "config",
-    "internal/codelocation",
-    "internal/containernode",
-    "internal/failer",
-    "internal/leafnodes",
-    "internal/remote",
-    "internal/spec",
-    "internal/spec_iterator",
-    "internal/specrunner",
-    "internal/suite",
-    "internal/testingtproxy",
-    "internal/writer",
-    "reporters",
-    "reporters/stenographer",
-    "reporters/stenographer/support/go-colorable",
-    "reporters/stenographer/support/go-isatty",
-    "types"
-  ]
-  revision = "2e1be8f7d90e9d3e3e58b0ce470f2f14d075406f"
-  version = "v1.7.0"
-
-[[projects]]
-  name = "github.com/onsi/gomega"
-  packages = [
-    ".",
-    "format",
-    "internal/assertion",
-    "internal/asyncassertion",
-    "internal/oraclematcher",
-    "internal/testingtsupport",
-    "matchers",
-    "matchers/support/goraph/bipartitegraph",
-    "matchers/support/goraph/edge",
-    "matchers/support/goraph/node",
-    "matchers/support/goraph/util",
-    "types"
-  ]
-  revision = "65fb64232476ad9046e57c26cd0bff3d3a8dc6cd"
-  version = "v1.4.3"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
@@ -285,10 +252,7 @@
   name = "golang.org/x/net"
   packages = [
     "context",
-    "context/ctxhttp",
-    "html",
-    "html/atom",
-    "html/charset"
+    "context/ctxhttp"
   ]
   revision = "927f97764cc334a6575f4b7a1584a147864d5723"
 
@@ -310,23 +274,9 @@
 [[projects]]
   name = "golang.org/x/text"
   packages = [
-    "encoding",
-    "encoding/charmap",
-    "encoding/htmlindex",
-    "encoding/internal",
-    "encoding/internal/identifier",
-    "encoding/japanese",
-    "encoding/korean",
-    "encoding/simplifiedchinese",
-    "encoding/traditionalchinese",
-    "encoding/unicode",
     "internal/gen",
-    "internal/tag",
     "internal/triegen",
     "internal/ucd",
-    "internal/utf8internal",
-    "language",
-    "runes",
     "transform",
     "unicode/cldr",
     "unicode/norm"
@@ -349,19 +299,6 @@
   version = "v1.4.0"
 
 [[projects]]
-  name = "gopkg.in/fsnotify.v1"
-  packages = ["."]
-  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
-  source = "https://github.com/fsnotify/fsnotify.git"
-  version = "v1.4.7"
-
-[[projects]]
-  branch = "v1"
-  name = "gopkg.in/tomb.v1"
-  packages = ["."]
-  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
-
-[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
@@ -370,6 +307,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "256d6d452a03466db745476bbebf305aaf8e3e0a63b9ad08fcd00f14642fb015"
+  inputs-digest = "154e7180e265beaaa2ff7cc110dc96bec9f5c4970158caedde78292358686c4c"
   solver-name = "gps-cdcl"
   solver-version = 1
