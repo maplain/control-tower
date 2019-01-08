@@ -28,6 +28,7 @@ import (
 var (
 	templateKeysCmdTemplateFilePath string
 	templateKeysOutputType          string
+	templateKeyTemplateFormat       string
 )
 
 const (
@@ -44,7 +45,9 @@ var templateKeysCmd = &cobra.Command{
 		data, err := io.ReadFromFile(templateKeysCmdTemplateFilePath)
 		cterror.Check(err)
 
-		keys := templates.AllUniqueKeys(string(data))
+		keys, err := templates.AllUniqueKeys(string(data), templates.TemplateType(templateKeyTemplateFormat))
+		cterror.Check(err)
+
 		switch templateKeysOutputType {
 		case "table":
 			var res [][]string
@@ -52,7 +55,7 @@ var templateKeysCmd = &cobra.Command{
 				res = append(res, []string{key})
 			}
 			io.WriteTable(res, []string{"Keys"})
-		case "":
+		case "text":
 			for _, key := range keys {
 				fmt.Println(key)
 			}
@@ -65,6 +68,7 @@ var templateKeysCmd = &cobra.Command{
 func init() {
 	templateCmd.AddCommand(templateKeysCmd)
 	templateKeysCmd.Flags().StringVarP(&templateKeysCmdTemplateFilePath, "template", "t", "", "template file")
-	templateKeysCmd.Flags().StringVarP(&templateKeysOutputType, "format", "m", "table", "output format")
+	templateKeysCmd.Flags().StringVarP(&templateKeysOutputType, "format", "m", "text", "output format")
+	templateKeysCmd.Flags().StringVar(&templateKeyTemplateFormat, "template-format", "bosh", "template file format")
 	templateKeysCmd.MarkFlagRequired("template")
 }

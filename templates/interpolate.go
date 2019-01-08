@@ -88,13 +88,49 @@ func (resolver TemplateResolver) resolve(expectAllKeys bool) ([]byte, error) {
 }
 
 var (
-	interpolationRegex = regexp.MustCompile(`\(\((!?[-/\.\w\pL]+)\)\)`)
+	interpolationRegexBosh = regexp.MustCompile(`\(\((!?[-/\.\w\pL]+)\)\)`)
+	interpolationRegexRuby = regexp.MustCompile(`<%= *([-_\w\pL]+) *%>`)
 )
 
-func AllUniqueKeys(data string) []string {
+type TemplateType string
+
+const (
+	UnsupportedTemplateType = cterror.Error("unsupported template type")
+
+	BoshTemplateType TemplateType = "bosh"
+	RubyTemplateType              = "ruby"
+)
+
+func AllUniqueKeys(data string, templateType TemplateType) ([]string, error) {
+	switch templateType {
+	case BoshTemplateType:
+		return AllUniqueKeysInBoshTemplate(data), nil
+	case RubyTemplateType:
+		return AllUniqueKeysInRubyTemplate(data), nil
+	default:
+		return []string{}, errors.Wrap(UnsupportedTemplateType, string(templateType))
+	}
+}
+
+func AllUniqueKeysInRubyTemplate(data string) []string {
 	names := make(map[string]struct{})
 
-	for _, match := range interpolationRegex.FindAllSubmatch([]byte(data), -1) {
+	for _, match := range interpolationRegexRuby.FindAllSubmatch([]byte(data), -1) {
+		names[strings.TrimPrefix(string(match[1]), "!")] = struct{}{}
+	}
+
+	var res []string
+	for key, _ := range names {
+		res = append(res, key)
+	}
+
+	return res
+}
+
+func AllUniqueKeysInBoshTemplate(data string) []string {
+	names := make(map[string]struct{})
+
+	for _, match := range interpolationRegexBosh.FindAllSubmatch([]byte(data), -1) {
 		names[strings.TrimPrefix(string(match[1]), "!")] = struct{}{}
 	}
 
