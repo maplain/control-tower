@@ -54,16 +54,21 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 		err := deployCmdValidate()
 		cterror.Check(err)
 
-		dcmd := client.NewFlyCmd()
-		if deployTarget != "" {
-			dcmd.WithTarget(rc.TargetName(deployTarget))
-		} else {
+		if deployTarget == "" || pipelineName == "" {
 			ctx, name, err := config.LoadInUseContext()
-			if err == nil {
-				dcmd.WithTarget(rc.TargetName(ctx.Contexts[name].Target))
+			cterror.Check(err)
+
+			if deployTarget == "" {
+				deployTarget = ctx.Contexts[name].Target
+			}
+			if pipelineName == "" {
+				pipelineName = ctx.Contexts[name].Pipeline
 			}
 		}
-		dcmd.WithSubCommand(setPipelineCmd).
+
+		dcmd := client.NewFlyCmd().
+			WithTarget(rc.TargetName(deployTarget)).
+			WithSubCommand(setPipelineCmd).
 			WithArg(flyPipelineFlag, pipelineName).
 			WithArg(flyPipelineConfigFlag, templatePath)
 
@@ -111,5 +116,4 @@ func init() {
 	deployCmd.Flags().StringArrayVar(&deployProfilePaths, "profile-path", nil, "profile path, can be used multiple times to specify many profile paths to be used")
 	deployCmd.Flags().StringVarP(&pipelineName, "pipeline-name", "n", "", "pipeline name you want to set")
 	deployCmd.MarkFlagRequired("template")
-	deployCmd.MarkFlagRequired("pipeline-name")
 }

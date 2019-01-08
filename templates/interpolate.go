@@ -18,9 +18,6 @@ const (
 )
 
 func Interpolate(configFile string, varFiles []string) (string, error) {
-	if io.NotExist(configFile) {
-		return "", errors.Wrap(TemplateFileNotFoundError, configFile)
-	}
 	config, err := io.ReadFromFile(configFile)
 	if err != nil {
 		return "", err
