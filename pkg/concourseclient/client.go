@@ -2,6 +2,7 @@ package concourseclient
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -123,6 +124,9 @@ func (c *oldCClient) LatestJobBuildIDOnStatus(team, pipeline, job, status string
 			if build.Status == status {
 				return build.ID, nil
 			}
+		}
+		if pagination.Next == nil {
+			return -1, errors.New("no available jobs")
 		}
 		builds, pagination, ifpagination, err = t.JobBuilds(pipeline, job, *pagination.Next)
 		if err != nil {
