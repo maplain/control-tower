@@ -173,9 +173,18 @@ groups:
       - run-precheck-release-lock
       - deploy-kubo
       - deploy-kubo-release-lock
+
+  - name: outputs
+    jobs:
+      - outputs
+      - claim-lock-for-outputs
+      - outputs-release-lock
+
+  - name: delete-kubo
+    jobs:
+      - claim-lock-for-deletion
       - delete-kubo
       - delete-kubo-release-lock
-      - outputs
 
   - name: dev
     jobs:
@@ -184,12 +193,6 @@ groups:
       - deploy-kubo
       - delete-kubo
       - outputs
-
-  - name: maintenance
-    jobs:
-      - run-precheck-release-lock
-      - deploy-kubo-release-lock
-      - delete-kubo-release-lock
 
 ############################################
 # Jobs
@@ -258,11 +261,25 @@ jobs:
     passed: [ 'deploy-kubo' ]
   - <<: *release_pks_lock
 
+# Claim kubo test bed
+- name: claim-lock-for-outputs
+  serial: true
+  serial_groups:
+    - outputs
+  plan:
+  - put: pks-lock
+    params:
+      claim: ((lock-name))
+  <<: *notify_failure
+
 - name: outputs
+  serial: true
+  serial_groups:
+    - outputs
   plan:
   - aggregate:
     - get: pks-lock
-      passed: [ 'deploy-kubo' ]
+      passed: [ 'claim-lock-for-outputs' ]
       trigger: true
     - get: kubeconfig
       passed: [ 'deploy-kubo' ]
@@ -271,6 +288,15 @@ jobs:
       trigger: true
   - task: outputs
     file: pks-concourse/tasks/deploy-kubo-outputs.yml
+
+- name: outputs-release-lock
+  serial: true
+  serial_groups:
+    - outputs
+  plan:
+  - get: pks-lock
+    passed: [ 'claim-lock-for-outputs' ]
+  - <<: *release_pks_lock
 
 - name: deploy-kubo
   serial: true
@@ -333,6 +359,15 @@ jobs:
     <<: *delete_kubo
   <<: *notify_success
 
+# Claim kubo test bed
+- name: claim-lock-for-deletion
+  serial: true
+  plan:
+  - put: pks-lock
+    params:
+      claim: ((lock-name))
+  <<: *notify_failure
+
 - name: delete-kubo
   serial: true
   serial_groups:
@@ -349,7 +384,7 @@ jobs:
       passed: [ 'deploy-kubo' ]
     - get: gcs-nsx-cf-cni-tarball
     - get: pks-lock
-      passed: [ 'deploy-kubo' ]
+      passed: [ 'claim-lock-for-deletion' ]
       version: every
     - get: kubeconfig
       passed: [ 'deploy-kubo' ]
@@ -377,5 +412,5 @@ jobs:
     - delete-kubo
   plan:
   - get: pks-lock
-    passed: [ 'deploy-kubo' ]
+    passed: [ 'claim-lock-for-deletion' ]
   - <<: *release_pks_lock
