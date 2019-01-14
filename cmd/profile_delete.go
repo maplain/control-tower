@@ -15,16 +15,11 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
-	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
-)
-
-const (
-	EmptyProfileDeleteNameError = cterror.Error("name can not be empty")
 )
 
 var (
@@ -39,19 +34,20 @@ var deleteCmd = &cobra.Command{
 		err := profileDeleteValidate()
 		cterror.Check(err)
 
-		filepath, err := config.GetProfilePath(profileDeleteName)
+		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
 
-		if !io.NotExist(filepath) {
-			err = os.Remove(filepath)
-			cterror.Check(err)
-		}
+		profiles.RemoveProfile(profileDeleteName)
+		err = profiles.Save()
+		cterror.Check(err)
+
+		fmt.Printf("profile %s is deleted successfully", profileDeleteName)
 	},
 }
 
 func profileDeleteValidate() error {
 	if profileDeleteName == "" {
-		return EmptyProfileDeleteNameError
+		return config.EmptyProfileDeleteNameError
 	}
 	return nil
 }

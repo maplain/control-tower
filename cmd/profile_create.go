@@ -15,23 +15,27 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/pkg/errors"
 
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/maplain/control-tower/pkg/secret"
+	"github.com/maplain/control-tower/templates"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 )
 
 var (
-	configurations map[string]string
-	profileName    string
-	profileType    string
-	overwrite      bool
-	varFilePath    string
+	configurations              map[string]string
+	profileName                 string
+	profileType                 string
+	overwrite                   bool
+	varFilePath                 string
+	profileCreateIsTemplateType bool
+	profileCreateTags           []string
 )
 
 // createCmd represents the create command
@@ -48,7 +52,10 @@ or interactively for a supported built-in type, eg:
 ct profile create --type deploy-kubo --name test
 
 You can find out all supported types by:
-ct profile types`,
+ct profile types
+
+you can use --template to create a templated profile. when it's used during pipeline
+deployment, ct will interactively prompt you to fill in templated values`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := profileCreateValidate()
 		cterror.Check(err)
@@ -69,13 +76,47 @@ ct profile types`,
 			cterror.Check(err)
 		}
 
+		var keys []string
+		if profileCreateIsTemplateType {
+			keys = templates.AllUniqueKeysInBoshTemplate(string(d[:]))
+			if len(keys) == 0 {
+				cterror.Check(errors.New("template file doesn't have templated fields or is not templated using (())"))
+			}
+		}
+
 		ed, err := secret.Encrypt(string(d[:]), encryptionKey)
 		cterror.Check(err)
 
-		filepath, err := config.GetProfilePath(profileName)
+		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
-		err = io.WriteToFile(ed, filepath)
+
+		tags := config.NewTags()
+		for _, tag := range profileCreateTags {
+			tags.Add(tag)
+		}
+
+		p := config.Profile{
+			Name: profileName,
+			Tags: tags,
+			TemplateKeys: map[templates.TemplateType][]string{
+				templates.BoshTemplateType: keys,
+			},
+		}
+		err = profiles.SaveProfile(p, overwrite, ed)
+
+		if err != nil {
+			switch errors.Cause(err) {
+			case config.ProfileAlreadyExistError:
+				fmt.Printf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName)
+			default:
+				cterror.Check(err)
+			}
+		}
+
+		err = profiles.Save()
 		cterror.Check(err)
+
+		fmt.Printf("profile %s is created successfully", profileName)
 	},
 }
 
@@ -90,16 +131,6 @@ func profileCreateValidate() error {
 			return err
 		}
 	}
-	filepath, err := config.GetProfilePath(profileName)
-	if err != nil {
-		return err
-	}
-
-	if !io.NotExist(filepath) {
-		if !overwrite {
-			return errors.New(fmt.Sprintf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName))
-		}
-	}
 	return nil
 }
 
@@ -110,5 +141,7 @@ func init() {
 	createCmd.Flags().StringVarP(&profileName, "name", "n", "", "name of the profile")
 	createCmd.Flags().StringVarP(&profileType, "type", "t", "", "type of the profile")
 	createCmd.Flags().BoolVar(&overwrite, "overwrite", false, "whether to overwrite existing profile with the same name")
+	createCmd.Flags().BoolVar(&profileCreateIsTemplateType, "template", false, "if this profile is a template")
+	createCmd.Flags().StringSliceVar(&profileCreateTags, "tag", []string{}, "tags for a profile, which can be used to select a group of profile")
 	createCmd.MarkFlagRequired("name")
 }

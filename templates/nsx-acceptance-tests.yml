@@ -90,9 +90,9 @@ resources:
   type: pool
   source:
     uri: git@gitlab.eng.vmware.com:PKS/pks-locks.git
-    branch: master
+    branch: ((pks-lock-branch))
     private_key: ((gitlab-private-key))
-    pool: nsx
+    pool: ((pks-lock-pool))
 
 # temp bucket to upload the release tars to
 - name: gcs-pks-nsx-t-tarball-untested

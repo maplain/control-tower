@@ -41,6 +41,8 @@ var (
 	deployProfilePaths []string
 	deployTarget       string
 	pipelineName       string
+
+	deployCmdEncryptionKey string
 )
 
 // deployCmd represents the deploy command
@@ -73,7 +75,7 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 			WithArg(flyPipelineConfigFlag, templatePath)
 
 		for _, name := range deployProfileNames {
-			profileData, err := readProfile(name)
+			profileData, err := config.LoadProfile(name, deployCmdEncryptionKey)
 			cterror.Check(err)
 
 			tmpfile, err := ioutil.TempFile("", "profiles")
@@ -115,5 +117,6 @@ func init() {
 	deployCmd.Flags().StringArrayVarP(&deployProfileNames, "profile-name", "p", nil, "profile name, can be used multiple times to specify many profiles to be used")
 	deployCmd.Flags().StringArrayVar(&deployProfilePaths, "profile-path", nil, "profile path, can be used multiple times to specify many profile paths to be used")
 	deployCmd.Flags().StringVarP(&pipelineName, "pipeline-name", "n", "", "pipeline name you want to set")
+	deployCmd.Flags().StringVarP(&deployCmdEncryptionKey, "key", "k", config.DefaultEncryptionKey, "a key to encrypt templates and profiles, which has to be in length of 16, 24 or 32 bytes")
 	deployCmd.MarkFlagRequired("template")
 }

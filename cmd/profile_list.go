@@ -15,13 +15,12 @@
 package cmd
 
 import (
-	"path"
+	"strconv"
 
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/cobra"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/spf13/cobra"
 )
 
 // listCmd represents the list command
@@ -32,18 +31,14 @@ var listCmd = &cobra.Command{
 
 ct profile list.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Find home directory.
-		home, err := homedir.Dir()
-		cterror.Check(err)
-
-		files, err := io.GetFilenames(path.Join(home, config.ProfileFolder))
+		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
 
 		var entries [][]string
-		for _, f := range files {
-			entries = append(entries, []string{path.Base(f)})
+		for _, p := range profiles {
+			entries = append(entries, []string{p.Name, p.Tags.String(), strconv.FormatBool(p.IsTemplate())})
 		}
-		io.WriteTable(entries, []string{"Profile Name"})
+		io.WriteTable(entries, []string{"Profile Name", "Tags", "IsTemplate"})
 	},
 }
 

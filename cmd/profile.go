@@ -19,6 +19,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/maplain/control-tower/templates"
@@ -46,7 +47,7 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(profileCmd)
-	profileCmd.PersistentFlags().StringVarP(&encryptionKey, "key", "k", "1234567891123456", "a key to encrypt templates and profiles, which has to be in length of 16, 24 or 32 bytes")
+	profileCmd.PersistentFlags().StringVarP(&encryptionKey, "key", "k", config.DefaultEncryptionKey, "a key to encrypt templates and profiles, which has to be in length of 16, 24 or 32 bytes")
 	profileCmd.MarkFlagRequired("key")
 }
 

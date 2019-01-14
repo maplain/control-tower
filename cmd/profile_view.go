@@ -15,14 +15,12 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
-	"github.com/maplain/control-tower/pkg/secret"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -37,7 +35,7 @@ var viewCmd = &cobra.Command{
 
 ct profile view -n deploy-kubo --key=1234567891123456`,
 	Run: func(cmd *cobra.Command, args []string) {
-		d, err := readProfile(viewName)
+		d, err := config.LoadProfile(viewName, encryptionKey)
 		cterror.Check(err)
 
 		yamld, err := io.DumpYaml(d)
@@ -45,28 +43,6 @@ ct profile view -n deploy-kubo --key=1234567891123456`,
 
 		fmt.Printf("%s", yamld)
 	},
-}
-
-func readProfile(name string) (string, error) {
-	filepath, err := config.GetProfilePath(name)
-	if err != nil {
-		return "", err
-	}
-
-	if io.NotExist(filepath) {
-		return "", errors.New(fmt.Sprintf("profile with name %s does not exist. please use `ct profile list` to check available profiles", viewName))
-	}
-
-	ed, err := io.ReadFromFile(filepath)
-	if err != nil {
-		return "", err
-	}
-
-	d, err := secret.Decrypt(string(ed[:]), encryptionKey)
-	if err != nil {
-		return "", err
-	}
-	return d, nil
 }
 
 func init() {
