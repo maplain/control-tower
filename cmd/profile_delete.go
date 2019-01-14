@@ -37,7 +37,7 @@ var deleteCmd = &cobra.Command{
 		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
 
-		profiles.RemoveProfile(profileDeleteName)
+		profiles.RemoveProfileByName(profileDeleteName)
 		err = profiles.Save()
 		cterror.Check(err)
 

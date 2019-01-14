@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -98,7 +99,13 @@ func (v Values) GetInt(key string) (int, error) {
 
 func InteractivePopulateStringValues(inputs Values) Values {
 	reader := bufio.NewReader(os.Stdin)
-	for name, value := range inputs {
+	var ordered []string
+	for k, _ := range inputs {
+		ordered = append(ordered, k)
+	}
+	sort.Strings(ordered)
+	for _, name := range ordered {
+		value := inputs[name]
 	Setvalue:
 		if value != "" {
 			fmt.Printf("type in the value for %s (type Enter to use default: %s)\n", name, value)

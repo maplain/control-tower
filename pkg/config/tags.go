@@ -3,27 +3,22 @@ package config
 import (
 	"sort"
 	"strings"
+
+	"github.com/maplain/control-tower/pkg/io"
 )
 
-type Tag string
-type Tags map[Tag]struct{}
+type Tags struct {
+	io.StringSet
+}
 
 func NewTags() Tags {
-	return make(map[Tag]struct{})
-}
-
-func (t Tags) Add(tag string) {
-	t[Tag(tag)] = struct{}{}
-}
-
-func (t Tags) Remove(tag string) {
-	delete(t, Tag(tag))
+	return Tags{io.NewStringSet()}
 }
 
 func (t Tags) String() string {
 	res := []string{}
-	for k, _ := range t {
-		res = append(res, string(k))
+	for k, _ := range t.StringSet {
+		res = append(res, k)
 	}
 	sort.Strings(res)
 	return strings.Join(res, ",")

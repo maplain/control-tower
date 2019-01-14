@@ -35,7 +35,10 @@ var viewCmd = &cobra.Command{
 
 ct profile view -n deploy-kubo --key=1234567891123456`,
 	Run: func(cmd *cobra.Command, args []string) {
-		d, err := config.LoadProfile(viewName, encryptionKey)
+		profiles, err := config.LoadProfileControlInfo()
+		cterror.Check(err)
+
+		d, err := profiles.LoadProfileByName(viewName, encryptionKey)
 		cterror.Check(err)
 
 		yamld, err := io.DumpYaml(d)

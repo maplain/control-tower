@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	OverwriteExistingProfile = true
 	ProfileAlreadyExistError = cterror.Error("profile already exist")
 	profileFolder            = ".control-tower-profile"
 	profilesInfo             = ".profiles"
@@ -29,7 +30,7 @@ type Profile struct {
 	Name         string
 	TemplateKeys map[templates.TemplateType][]string
 	Tags         Tags
-	path         string
+	Path         string
 }
 
 func (p Profile) IsTemplate() bool {
@@ -44,7 +45,46 @@ func (p Profile) IsTemplate() bool {
 	return false
 }
 
-type Profiles map[string]Profile
+type NamedProfiles map[string]Profile
+type TagedProfiles map[string]io.StringSet
+
+type Profiles struct {
+	NamedProfiles
+	// saves mapping between tag and profile name
+	TagedProfiles
+}
+
+func NewProfiles() Profiles {
+	return Profiles{
+		TagedProfiles: make(map[string]io.StringSet),
+		NamedProfiles: make(map[string]Profile),
+	}
+}
+
+func (p Profiles) GetProfileInfos() []Profile {
+	res := []Profile{}
+	for _, profile := range p.NamedProfiles {
+		res = append(res, profile)
+	}
+	return res
+}
+
+func (p Profiles) GetProfilesByTag(tag string) []Profile {
+	var res []Profile
+	names := p.TagedProfiles[tag]
+	for n, _ := range names {
+		res = append(res, p.NamedProfiles[n])
+	}
+	return res
+}
+
+func (p Profiles) GetProfileInfoByName(name string) (Profile, error) {
+	profile, found := p.NamedProfiles[name]
+	if !found {
+		return profile, errors.Wrap(ProfileNotExistError, name)
+	}
+	return profile, nil
+}
 
 func (p Profiles) bytes() ([]byte, error) {
 	data, err := yaml.Marshal(p)
@@ -54,26 +94,93 @@ func (p Profiles) bytes() ([]byte, error) {
 	return data, nil
 }
 
-func (p Profiles) RemoveProfile(name string) {
-	delete(p, name)
+func (p Profiles) RemoveProfileByName(name string) {
+	// remove profile content from disk
+	profile, found := p.NamedProfiles[name]
+	if found {
+		os.Remove(profile.Path)
+	}
+
+	// remove profile info from profiles
+	delete(p.NamedProfiles, name)
+	// for each tag, remove profile from corresponding list
+	for t, _ := range profile.Tags.StringSet {
+		p.TagedProfiles[t].Remove(name)
+	}
 }
 
-func (p Profiles) SaveProfile(profile Profile, overwrite bool, data string) error {
-	path, err := getProfilePath(profile.Name)
-	if err != nil {
-		return err
+// LoadProfile reads in profile content by name and a decryption key
+func (p Profiles) LoadProfileByName(name, key string) (string, error) {
+	profile, found := p.NamedProfiles[name]
+	if !found {
+		return "", errors.Wrap(ProfileNotExistError, name)
 	}
-	_, ok := p[profile.Name]
+
+	d, err := readProfileFile(profile.Path, key)
+	return d, err
+}
+
+// readProfileFile reads in profile content by profile path and a decryption key
+func readProfileFile(path, key string) (string, error) {
+	ed, err := io.ReadFromFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	d, err := secret.Decrypt(string(ed[:]), key)
+	if err != nil {
+		return "", err
+	}
+	return d, nil
+}
+
+// SaveProfileInfo updates profile info in profiles object
+func (p Profiles) SaveProfileInfo(profile Profile, overwrite bool) error {
+	var path string
+	var err error
+
+	_, ok := p.NamedProfiles[profile.Name]
 	if ok {
 		if !overwrite {
 			return errors.Wrap(ProfileAlreadyExistError, profile.Name)
 		}
 	}
 
-	profile.path = path
-	p[profile.Name] = profile
+	// by default use path in profile struct
+	path = profile.Path
+	if path == "" {
+		// if path is empty, fall back to default path
+		path, err = getProfilePath(profile.Name)
+		if err != nil {
+			return err
+		}
+	}
 
-	err = io.WriteToFile(data, path)
+	// overwrite profile info in profiles struct
+	profile.Path = path
+	p.NamedProfiles[profile.Name] = profile
+
+	for t, _ := range profile.Tags.StringSet {
+		set := p.TagedProfiles[t]
+		if set == nil {
+			p.TagedProfiles[t] = io.NewStringSet()
+		}
+		p.TagedProfiles[t].Add(profile.Name)
+	}
+
+	return nil
+}
+
+// SaveProfile adds one profile under profiles' control
+// it adds profile info and saves its content on disk as well
+func (p Profiles) SaveProfile(profile Profile, overwrite bool, data string) error {
+	err := p.SaveProfileInfo(profile, overwrite)
+	if err != nil {
+		return err
+	}
+
+	// persist profile on disk
+	err = io.WriteToFile(data, p.NamedProfiles[profile.Name].Path)
 	if err != nil {
 		return err
 	}
@@ -123,7 +230,7 @@ func getProfileControlInfoPath() (string, error) {
 }
 
 func LoadProfileControlInfo() (Profiles, error) {
-	res := Profiles(make(map[string]Profile))
+	res := NewProfiles()
 	path, err := getProfileControlInfoPath()
 	if err != nil {
 		return res, err
@@ -152,30 +259,8 @@ func LoadProfileControlInfo() (Profiles, error) {
 	return res, nil
 }
 
-func LoadProfile(name, key string) (string, error) {
-	filepath, err := getProfilePath(name)
-	if err != nil {
-		return "", err
-	}
-
-	if io.NotExist(filepath) {
-		return "", errors.Wrap(ProfileNotExistError, name)
-	}
-
-	ed, err := io.ReadFromFile(filepath)
-	if err != nil {
-		return "", err
-	}
-
-	d, err := secret.Decrypt(string(ed[:]), key)
-	if err != nil {
-		return "", err
-	}
-	return d, nil
-}
-
 func initializeProfileControlInfo() (Profiles, error) {
-	res := Profiles(make(map[string]Profile))
+	res := NewProfiles()
 	var files []string
 
 	folder, err := getProfileFolder()
@@ -196,22 +281,27 @@ func initializeProfileControlInfo() (Profiles, error) {
 	if err != nil {
 		return res, err
 	}
+
 	for _, file := range files {
 		profileName := filepath.Base(file)
-		data, err := LoadProfile(profileName, DefaultEncryptionKey)
+
+		data, err := readProfileFile(file, DefaultEncryptionKey)
 		if err != nil {
 			return res, err
 		}
-		keys := templates.AllUniqueKeysInBoshTemplate(data)
+
 		p := Profile{
 			Name: profileName,
-			path: file,
+			Path: file,
 		}
+
+		keys := templates.AllUniqueKeysInBoshTemplate(data)
 		if len(keys) != 0 {
 			p.TemplateKeys = make(map[templates.TemplateType][]string)
 			p.TemplateKeys[templates.BoshTemplateType] = keys
 		}
-		res[profileName] = p
+
+		res.NamedProfiles[profileName] = p
 	}
 	return res, nil
 }

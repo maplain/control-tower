@@ -23,6 +23,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	profileListCmdProfileTag string
+)
+
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -35,7 +39,13 @@ ct profile list.`,
 		cterror.Check(err)
 
 		var entries [][]string
-		for _, p := range profiles {
+		var ps []config.Profile
+		if profileListCmdProfileTag != "" {
+			ps = profiles.GetProfilesByTag(profileListCmdProfileTag)
+		} else {
+			ps = profiles.GetProfileInfos()
+		}
+		for _, p := range ps {
 			entries = append(entries, []string{p.Name, p.Tags.String(), strconv.FormatBool(p.IsTemplate())})
 		}
 		io.WriteTable(entries, []string{"Profile Name", "Tags", "IsTemplate"})
@@ -44,4 +54,5 @@ ct profile list.`,
 
 func init() {
 	profileCmd.AddCommand(listCmd)
+	listCmd.Flags().StringVarP(&profileListCmdProfileTag, "tag", "t", "", "tag of profiles")
 }
