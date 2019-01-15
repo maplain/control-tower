@@ -24,7 +24,7 @@ import (
 
 // openCmd represents the open command
 var openCmd = &cobra.Command{
-	Use:   "open",
+	Use:   "o",
 	Short: "open in use fly context",
 	Run: func(cmd *cobra.Command, args []string) {
 		var c config.Context

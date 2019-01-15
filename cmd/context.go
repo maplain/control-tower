@@ -20,7 +20,7 @@ import (
 
 // contextCmd represents the context command
 var contextCmd = &cobra.Command{
-	Use:   "context",
+	Use:   "c",
 	Short: "manages fly contexts",
 }
 

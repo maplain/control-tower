@@ -20,7 +20,7 @@ import (
 
 // templateCmd represents the template command
 var templateCmd = &cobra.Command{
-	Use:   "template",
+	Use:   "tp",
 	Short: "manages templates",
 }
 

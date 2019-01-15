@@ -20,7 +20,7 @@ import (
 
 // flyCmd represents the fly command
 var flyCmd = &cobra.Command{
-	Use:   "fly",
+	Use:   "f",
 	Short: "concourse fly complementary utility",
 }
 
