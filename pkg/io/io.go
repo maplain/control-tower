@@ -96,6 +96,14 @@ func NewValuesFromStringSlice(s []string) Values {
 	return Values(res)
 }
 
+func (v Values) ToMap() map[string]string {
+	res := make(map[string]string)
+	for k, val := range v {
+		res[k] = val.Value
+	}
+	return res
+}
+
 func (v Values) AddValues(values Values) {
 	for k, val := range values {
 		v[k] = val

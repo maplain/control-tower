@@ -15,10 +15,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/pkg/errors"
 
 	"github.com/concourse/fly/rc"
 	"github.com/maplain/control-tower/pkg/config"
@@ -98,8 +99,8 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 			if profileInfo.IsTemplate() {
 				newProfileInfo, vars, err := profileInfo.PopulateTemplate()
 				cterror.Check(err)
+				fmt.Println(vars)
 				profileData, err = templates.InterpolateContent(profileData, []string{vars})
-				cterror.Check(err)
 				profiles.SaveProfileWithKey(newProfileInfo, false, profileData, deployCmdEncryptionKey)
 				profiles.Save()
 			}
@@ -122,6 +123,9 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 		}
 
 		err = dcmd.Run()
+		if err != nil {
+			err = errors.Wrap(err, "run fly deploy cmd failed")
+		}
 		cterror.Check(err)
 	},
 }

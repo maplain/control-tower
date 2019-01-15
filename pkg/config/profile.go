@@ -69,7 +69,8 @@ func (p Profile) PopulateTemplate() (Profile, string, error) {
 	tags := strings.Split(tagstr, ",")
 	res.Tags = Tags{io.NewStringSetFromSlice(tags)}
 
-	d, err := yaml.Marshal(&vars)
+	varsmap := vars.ToMap()
+	d, err := yaml.Marshal(varsmap)
 	if err != nil {
 		return res, "", err
 	}

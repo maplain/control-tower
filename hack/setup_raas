@@ -6,6 +6,9 @@ secret_files=("raas-credentials" "nsx-t-secrets" "pks-releng-write-locks-bot")
 iaas_secret_file="vsphere-nsx-variables"
 raas_variable_file="raas-variables"
 
+SCRIPT_DIR="$(dirname "${BASH_SOURCE}")"
+source $SCRIPT_DIR/utils
+
 setup_dir() {
   target=${1:?}
   repo_url=${2:?}
@@ -45,10 +48,12 @@ setup() {
       exit 1
       ;;
   esac
+
+  # export this var so we can list pipelines defined there
   RAAS_SECRETS_DIR=$GOPATH/src/github.com/pivotal-cf/raas-secrets
   RAAS_REPO=git@github.com:pivotal-cf/raas-secrets.git
 
-  PKS_RELENG_CI_DIR=$GOPATH/src/github.com/pivotal-cf/pks-releng-ci
+  setup_env # from hack/utils
   PKS_RELENG_CI_REPO=git@github.com:pivotal-cf/pks-releng-ci.git
 
   releng_profile_tag="releng"
@@ -80,6 +85,7 @@ setup() {
 }
 
 teardown() {
+  unset_env # from hack/utils
   for f in "${secret_files[@]}"; do
     ct profile delete -n ${f}
   done

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+check_env() {
+  PKS_RELENG_CI_DIR=${PKS_RELENG_CI_DIR:?"run `setup_env` to setup PKS_RELENG_CI_DIR, run `unset_env` to unset it"}
+  echo 'looks good'
+}
+
+list_pipelines() {
+  check_env >/dev/null
+  ls ${PKS_RELENG_CI_DIR}/*.yml
+}
+
+list_nsx_pipelines() {
+  check_env >/dev/null
+  ls ${PKS_RELENG_CI_DIR}/*.yml | grep nsx
+}
+
+setup_env() {
+  export PKS_RELENG_CI_DIR=$GOPATH/src/github.com/pivotal-cf/pks-releng-ci
+}
+
+unset_env() {
+  unset PKS_RELENG_CI_DIR
+}
