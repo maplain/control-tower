@@ -40,17 +40,24 @@ var flyJobsCmd = &cobra.Command{
 		jobs, err := cli.Team().ListJobs(inusectx.Pipeline)
 		cterror.Check(err)
 
-		displayJobs(jobs)
+		err = displayJobs(jobs)
+		cterror.Check(err)
 	},
 }
 
-func displayJobs(jobs []atc.Job) {
+func displayJobs(jobs []atc.Job) error {
+	p, err := io.NewPrinter(outputFormat)
+	if err != nil {
+		return err
+	}
+
 	data := [][]string{}
 	for _, job := range jobs {
 		data = append(data, []string{strconv.Itoa(job.ID), job.Name})
 	}
 
-	io.WriteTable(data, []string{"ID", "Name"})
+	p.Display(!outputNoHeader, data, []string{"ID", "Name"})
+	return nil
 }
 
 func init() {

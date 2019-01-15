@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	cterror "github.com/maplain/control-tower/pkg/error"
@@ -27,7 +25,6 @@ import (
 
 var (
 	templateKeysCmdTemplateFilePath string
-	templateKeysOutputType          string
 	templateKeyTemplateFormat       string
 )
 
@@ -48,27 +45,20 @@ var templateKeysCmd = &cobra.Command{
 		keys, err := templates.AllUniqueKeys(string(data), templates.TemplateType(templateKeyTemplateFormat))
 		cterror.Check(err)
 
-		switch templateKeysOutputType {
-		case "table":
-			var res [][]string
-			for _, key := range keys {
-				res = append(res, []string{key})
-			}
-			io.WriteTable(res, []string{"Keys"})
-		case "text":
-			for _, key := range keys {
-				fmt.Println(key)
-			}
-		default:
-			cterror.Check(errors.Wrap(templateKeysUnsupportedOutputTypeError, templateKeysOutputType))
+		p, err := io.NewPrinter(outputFormat)
+		cterror.Check(err)
+
+		var res [][]string
+		for _, key := range keys {
+			res = append(res, []string{key})
 		}
+		p.Display(!outputNoHeader, res, []string{"keys"})
 	},
 }
 
 func init() {
 	templateCmd.AddCommand(templateKeysCmd)
 	templateKeysCmd.Flags().StringVarP(&templateKeysCmdTemplateFilePath, "template", "t", "", "template file")
-	templateKeysCmd.Flags().StringVarP(&templateKeysOutputType, "format", "m", "text", "output format")
 	templateKeysCmd.Flags().StringVar(&templateKeyTemplateFormat, "template-format", "bosh", "template file format")
 	templateKeysCmd.MarkFlagRequired("template")
 }

@@ -37,7 +37,11 @@ ct fly targets`,
 		for _, t := range targets {
 			data = append(data, []string{string(t)})
 		}
-		io.WriteTable(data, []string{"targets"})
+
+		p, err := io.NewPrinter(outputFormat)
+		cterror.Check(err)
+
+		p.Display(!outputNoHeader, data, []string{"targets"})
 	},
 }
 

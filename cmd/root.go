@@ -25,7 +25,9 @@ import (
 )
 
 var (
-	cfgFile string
+	cfgFile        string
+	outputFormat   string
+	outputNoHeader bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -65,6 +67,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.control-tower.yaml)")
+	rootCmd.PersistentFlags().StringVar(&outputFormat, "output-format", "table", "output format")
+	rootCmd.PersistentFlags().BoolVar(&outputNoHeader, "no-header", false, "if print out output header")
 }
 
 // initConfig reads in config file and ENV variables if set.

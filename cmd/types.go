@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +29,11 @@ var typesCmd = &cobra.Command{
 		for name, _ := range profileRegistry {
 			res = append(res, []string{name})
 		}
-		io.WriteTable(res, []string{"Type"})
+
+		p, err := io.NewPrinter(outputFormat)
+		cterror.Check(err)
+
+		p.Display(!outputNoHeader, res, []string{"Type"})
 	},
 }
 

@@ -35,7 +35,11 @@ var contextListCmd = &cobra.Command{
 		for name, c := range ctx.Contexts {
 			data = append(data, []string{name, strconv.FormatBool(c.InUse)})
 		}
-		io.WriteTable(data, []string{"Name", "Use"})
+
+		p, err := io.NewPrinter(outputFormat)
+		cterror.Check(err)
+
+		p.Display(!outputNoHeader, data, []string{"Name", "Use"})
 	},
 }
 

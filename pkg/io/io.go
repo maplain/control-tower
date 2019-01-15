@@ -2,7 +2,6 @@ package io
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,8 +12,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
+
+	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/olekukonko/tablewriter"
 	yaml "gopkg.in/yaml.v2"
+)
+
+const (
+	UnsupportedOutputFormatError = cterror.Error("unsupported output type")
 )
 
 func GetFilenames(root string) ([]string, error) {
@@ -28,10 +34,43 @@ func GetFilenames(root string) ([]string, error) {
 	return files, err
 }
 
-func WriteTable(data [][]string, header ...[]string) {
+type printer struct {
+	format string
+}
+
+type Printer interface {
+	Display(bool, [][]string, ...[]string)
+}
+
+func NewPrinter(outputFormat string) (*printer, error) {
+	switch outputFormat {
+	case "table", "csv":
+	default:
+		return nil, errors.Wrap(UnsupportedOutputFormatError, outputFormat)
+	}
+	return &printer{outputFormat}, nil
+}
+
+func (p *printer) Display(header bool, data [][]string, headers ...[]string) {
+	switch p.format {
+	case "table":
+		writeTable(header, data, headers...)
+	case "csv":
+		if header {
+			for _, h := range headers {
+				fmt.Println(strings.Join(h, ","))
+			}
+		}
+		for _, d := range data {
+			fmt.Println(strings.Join(d, ","))
+		}
+	}
+}
+
+func writeTable(header bool, data [][]string, headers ...[]string) {
 	table := tablewriter.NewWriter(os.Stdout)
-	if len(header) > 0 {
-		table.SetHeader(header[0])
+	if header && len(headers) > 0 {
+		table.SetHeader(headers[0])
 	}
 	for _, v := range data {
 		table.Append(v)

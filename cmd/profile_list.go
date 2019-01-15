@@ -50,7 +50,11 @@ ct profile list.`,
 		for _, p := range ps {
 			entries = append(entries, []string{p.Name, p.Tags.String(), strconv.FormatBool(p.IsTemplate())})
 		}
-		io.WriteTable(entries, []string{"Profile Name", "Tags", "IsTemplate"})
+
+		p, err := io.NewPrinter(outputFormat)
+		cterror.Check(err)
+
+		p.Display(!outputNoHeader, entries, []string{"Profile Name", "Tags", "IsTemplate"})
 	},
 }
 
