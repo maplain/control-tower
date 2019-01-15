@@ -1,0 +1,116 @@
+#!/bin/bash
+
+set -euo pipefail
+
+secret_files=("common-secrets" "pks-nsx-t-release-secrets")
+deploy_kubo_profile="deploy-kubo-$(whoami)"
+
+setup_dir() {
+  target=${1:?}
+  repo_url=${2:?}
+
+  if [ ! -d ${target} ]; then
+    echo "${target} does not exist, cloning it"
+    parent="$(dirname ${target})"
+    mkdir -p ${parent}
+    git clone ${repo_url} ${target}
+  else
+    pushd ${target} 2>&1 >/dev/null
+      echo "trying to stash ${target}"
+      echo "you local change will be stashed, use \`git stash apply\` to restore"
+      git stash
+      echo ""
+
+      echo "pulling latest ${target}"
+      git pull
+      echo ""
+    popd 2>&1 >/dev/null
+  fi
+}
+
+setup_usage() {
+  echo "usage: setup_kubo setup [--overwrite] [--skip]"
+  echo "use \`--overwrite\` to overwrite existing profiles"
+  echo "use \`--skip\` to skip interactively generation of profile ${deploy_kubo_profile}"
+}
+
+setup() {
+  local overwrite=""
+  local skip=""
+  while [[ $# -gt 0 ]]; do
+    local op1=${1}
+    case ${op1} in
+      "--overwrite"*)
+        overwrite=${op1}
+        shift
+        ;;
+      "--skip"*)
+        skip=${op1}
+        shift
+        ;;
+      *)
+        setup_usage
+        exit 1
+        ;;
+    esac
+  done
+
+  PKS_NSX_T_RELEASE_DIR=$GOPATH/src/gitlab.eng.vmware.com/PKS/pks-nsx-t-release
+  PKS_NSX_T_RELEASE_REPO=git@gitlab.eng.vmware.com:PKS/pks-nsx-t-release.git
+
+  profile_tag="kubo"
+
+  setup_dir ${PKS_NSX_T_RELEASE_DIR} ${PKS_NSX_T_RELEASE_REPO}
+
+  echo -n "Enter vault password:"
+  read -s vault_password
+  echo
+
+  pushd ${PKS_NSX_T_RELEASE_DIR} 2>&1 >/dev/null
+    for f in "${secret_files[@]}"; do
+      echo "adding ${f}"
+      ct profile create --var-file=<(ansible-vault decrypt --vault-password-file <(echo "${vault_password}") --output - ci/secrets/${f}.yml) -n ${f} --tag ${profile_tag} ${overwrite}
+    done
+  popd 2>&1 >/dev/null
+
+  if [ "${skip}" != "--skip" ]; then
+    echo "deploy-kubo profile name ${deploy_kubo_profile}"
+    ct profile create --type deploy-kubo -n ${deploy_kubo_profile} ${overwrite} --tag ${profile_tag}
+  fi
+}
+
+teardown() {
+  for f in "${secret_files[@]}"; do
+    ct profile delete -n ${f}
+  done
+  ct profile delete -n ${deploy_kubo_profile}
+}
+
+usage() {
+  echo "usage:"
+  echo -e "\tsetup_kubo setup"
+  echo -e "\tsetup_kubo teardown"
+}
+
+main() {
+  if [ ${#@} -le 0 ]; then
+    usage
+    exit 1
+  fi
+  local subcmd=${1}
+  shift
+  case ${subcmd} in
+    "setup"*)
+      setup "$@"
+      ;;
+    "teardown"*)
+      teardown "$@"
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

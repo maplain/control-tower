@@ -14,3 +14,15 @@ set-raas-force:
 
 rm-raas:
 	hack/setup_raas teardown
+
+update-kubo-static:
+	hack/setup_kubo setup --overwrite --skip
+
+set-kubo:
+	hack/setup_kubo setup
+
+set-kubo-force:
+	hack/setup_kubo setup --overwrite
+
+rm-kubo:
+	hack/setup_kubo teardown
