@@ -25,7 +25,7 @@ import (
 
 // contextListCmd represents the create command
 var contextListCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "l",
 	Short: "list all fly contexts",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, err := config.LoadContexts()

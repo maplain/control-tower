@@ -29,7 +29,7 @@ var (
 
 // viewCmd represents the view command
 var viewCmd = &cobra.Command{
-	Use:   "view",
+	Use:   "v",
 	Short: "view contents of a profile",
 	Long: `Examples:
 

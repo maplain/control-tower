@@ -41,8 +41,8 @@ var (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "A brief description of your command",
+	Use:   "c",
+	Short: "create a profile",
 	Long: `a profile can be created from key-value pairs, eg:
 ct profile create  --vars="a=b,c=d" --name=deploy-kubo
 

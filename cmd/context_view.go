@@ -29,7 +29,7 @@ var (
 
 // contextViewCmd represents the view command
 var contextViewCmd = &cobra.Command{
-	Use:   "view",
+	Use:   "v",
 	Short: "view a specific context. if name is not provided, view in use context",
 	Run: func(cmd *cobra.Command, args []string) {
 		if contextViewName == "" {

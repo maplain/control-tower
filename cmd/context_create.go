@@ -33,7 +33,7 @@ var (
 
 // contextCreateCmd represents the create command
 var contextCreateCmd = &cobra.Command{
-	Use:   "create",
+	Use:   "c",
 	Short: "creates a fly context",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := contextCreateValidate()

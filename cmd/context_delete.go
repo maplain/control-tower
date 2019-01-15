@@ -28,7 +28,7 @@ var (
 
 // contextDeleteCmd represents the view command
 var contextDeleteCmd = &cobra.Command{
-	Use:   "delete",
+	Use:   "d",
 	Short: "delete a specific context",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, err := config.LoadContexts()

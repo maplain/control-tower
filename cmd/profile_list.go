@@ -30,7 +30,7 @@ var (
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "l",
 	Short: "list all local profile names",
 	Long: `Examples:
 

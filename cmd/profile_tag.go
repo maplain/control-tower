@@ -30,7 +30,7 @@ var (
 
 // profileTagCmd represents the view command
 var profileTagCmd = &cobra.Command{
-	Use:   "tag",
+	Use:   "t",
 	Short: "tag a profile",
 	Long: `Examples:
 ct profile tag -n deploy-kubo -t=kubo`,

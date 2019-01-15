@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	"github.com/maplain/control-tower/pkg/config"
@@ -34,9 +32,6 @@ var (
 var profileCmd = &cobra.Command{
 	Use:   "p",
 	Short: "manages profiles, i.e: configurations for pipelines",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("profile called")
-	},
 }
 
 func init() {
