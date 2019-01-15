@@ -50,7 +50,7 @@ var (
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
-	Use:   "deploy",
+	Use:   "d",
 	Short: "deploys a pipeline with template specified and parameters saved in a profile",
 	Long: `Examples:
 
