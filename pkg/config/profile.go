@@ -180,7 +180,7 @@ func (p Profiles) AddTagForProfile(name string, tag string) error {
 
 	values, found := p.TagedProfiles[tag]
 	if !found {
-		p.TagedProfiles[tag] = io.NewStringSet()
+		values = io.NewStringSet()
 	}
 	values.Add(profile.Name)
 	p.TagedProfiles[tag] = values
