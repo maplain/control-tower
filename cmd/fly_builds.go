@@ -23,7 +23,8 @@ import (
 )
 
 var flyBuildsCmd = &cobra.Command{
-	Use: "jobs",
+	Use:   "b",
+	Short: "builds of a job",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
