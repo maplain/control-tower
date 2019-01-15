@@ -45,18 +45,18 @@ var flyUnpauseCmd = &cobra.Command{
 			cterror.Check(err)
 
 			if unpaused {
-				fmt.Printf("pipeline %s is unpaused.", inusectx.Pipeline)
+				fmt.Printf("pipeline %s is unpaused.\n", inusectx.Pipeline)
 			} else {
-				fmt.Printf("pipeline %s is already unpaused.", inusectx.Pipeline)
+				fmt.Printf("pipeline %s is already unpaused.\n", inusectx.Pipeline)
 			}
 		} else {
 			paused, err := cli.Team().PausePipeline(inusectx.Pipeline)
 			cterror.Check(err)
 
 			if paused {
-				fmt.Printf("pipeline %s is paused.", inusectx.Pipeline)
+				fmt.Printf("pipeline %s is paused.\n", inusectx.Pipeline)
 			} else {
-				fmt.Printf("pipeline %s is already paused.", inusectx.Pipeline)
+				fmt.Printf("pipeline %s is already paused.\n", inusectx.Pipeline)
 			}
 		}
 	},

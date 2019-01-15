@@ -56,7 +56,7 @@ var contextCreateCmd = &cobra.Command{
 		}
 		cterror.Check(err)
 
-		fmt.Printf("context %s is created\nuse ct context view -n %s to check details\n", contextCreateCmdName, contextCreateCmdName)
+		fmt.Printf("context %s is created\nuse ct c v -n %s to check details\n", contextCreateCmdName, contextCreateCmdName)
 	},
 }
 
