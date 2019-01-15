@@ -205,7 +205,7 @@ jobs:
   plan:
   - put: pks-lock
     params:
-      claim: ((lock-name))
+      acquire: true
   <<: *notify_failure
 
 
