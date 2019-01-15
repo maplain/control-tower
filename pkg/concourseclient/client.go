@@ -35,6 +35,7 @@ type ConcourseClient interface {
 type CTConcourseClient interface {
 	LatestJobBuildIDOnStatus(team, pipeline, job, status string) (int, error)
 	LatestJobBuild(team, pipeline, job string) (atc.Build, error)
+	LatestJobBuilds(team, pipeline, job string, limit int) ([]atc.Build, error)
 	ReadBuildLog(id string, writer io.Writer) error
 }
 
@@ -99,6 +100,15 @@ func (c *oldCClient) ReadBuildLog(id string, writer io.Writer) error {
 		return err
 	}
 	return nil
+}
+
+func (c *oldCClient) LatestJobBuilds(team, pipeline, job string, limit int) ([]atc.Build, error) {
+	t := c.Client().Team(team)
+	builds, _, _, err := t.JobBuilds(pipeline, job, concourse.Page{Limit: limit})
+	if err != nil {
+		return []atc.Build{}, err
+	}
+	return builds, nil
 }
 
 func (c *oldCClient) LatestJobBuild(team, pipeline, job string) (atc.Build, error) {

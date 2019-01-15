@@ -26,8 +26,12 @@ import (
 var openCmd = &cobra.Command{
 	Use:   "o",
 	Short: "open in use fly context",
+	Long: `usage:
+	ct o [context name]`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var c config.Context
+		var name string
+
 		ctx, name, err := config.LoadInUseContext()
 		cterror.Check(err)
 

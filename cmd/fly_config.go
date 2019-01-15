@@ -15,25 +15,29 @@
 package cmd
 
 import (
-	"sort"
-	"strconv"
+	"fmt"
+	"strings"
 
 	"github.com/concourse/fly/rc"
 	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
-	"github.com/maplain/control-tower/pkg/io"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
+)
+
+const (
+	JobNotFoundError = cterror.Error("job not found")
 )
 
 var (
-	flyBuildsCmdJobName string
-	flyBuildsCmdJobNum  int
+	flyGetConfigCmdJobName string
 )
 
-var flyBuildsCmd = &cobra.Command{
-	Use:   "b",
-	Short: "builds of a job",
+var flyGetConfigCmd = &cobra.Command{
+	Use:   "c",
+	Short: "get pipeline config",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
@@ -43,27 +47,32 @@ var flyBuildsCmd = &cobra.Command{
 		cli, err := concourseclient.NewConcourseClient(rc.TargetName(inusectx.Target))
 		cterror.Check(err)
 
-		if flyBuildsCmdJobNum > concourseclient.QueryBuildLimit {
-			flyBuildsCmdJobNum = concourseclient.QueryBuildLimit
-		}
-		builds, err := cli.LatestJobBuilds(inusectx.Team, inusectx.Pipeline, flyBuildsCmdJobName, flyBuildsCmdJobNum)
+		config, _, _, _, err := cli.Team().PipelineConfig(inusectx.Pipeline)
 		cterror.Check(err)
 
-		var data [][]string
-		sort.Slice(builds, func(i, j int) bool { return builds[i].ID < builds[j].ID })
-		for _, b := range builds {
-			data = append(data, []string{strconv.Itoa(b.ID), b.TeamName, b.Name, b.Status, b.JobName})
+		var d []byte
+		if flyGetConfigCmdJobName == "" {
+			pconfig, err := yaml.Marshal(config)
+			cterror.Check(err)
+			d = pconfig
+		} else {
+			for _, j := range config.Jobs {
+				if j.Name == flyGetConfigCmdJobName {
+					jconfig, err := yaml.Marshal(j)
+					cterror.Check(err)
+					d = jconfig
+				}
+			}
+			if strings.TrimSpace(string(d[:])) == "" {
+				cterror.Check(errors.Wrap(JobNotFoundError, flyGetConfigCmdJobName))
+			}
 		}
-		header := []string{"ID", "Team", "Name", "Status", "Job"}
 
-		p, err := io.NewPrinter(outputFormat)
-		p.Display(!outputNoHeader, data, header)
+		fmt.Printf("%s", string(d[:]))
 	},
 }
 
 func init() {
-	flyCmd.AddCommand(flyBuildsCmd)
-	flyBuildsCmd.Flags().StringVarP(&flyBuildsCmdJobName, "job", "j", "", "job name")
-	flyBuildsCmd.Flags().IntVarP(&flyBuildsCmdJobNum, "num", "n", 5, "number of builds to display(maximum: 20)")
-	flyBuildsCmd.MarkFlagRequired("job")
+	flyCmd.AddCommand(flyGetConfigCmd)
+	flyGetConfigCmd.Flags().StringVarP(&flyGetConfigCmdJobName, "job", "j", "", "job name")
 }
