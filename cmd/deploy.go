@@ -25,6 +25,7 @@ import (
 	cterror "github.com/maplain/control-tower/pkg/error"
 	client "github.com/maplain/control-tower/pkg/flyclient"
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/maplain/control-tower/templates"
 	"github.com/spf13/cobra"
 )
 
@@ -88,8 +89,20 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 		}
 
 		for _, name := range profileNames {
+			profileInfo, err := profiles.GetProfileInfoByName(name)
+			cterror.Check(err)
+
 			profileData, err := profiles.LoadProfileByName(name, deployCmdEncryptionKey)
 			cterror.Check(err)
+
+			if profileInfo.IsTemplate() {
+				newProfileInfo, vars, err := profileInfo.PopulateTemplate()
+				cterror.Check(err)
+				profileData, err = templates.InterpolateContent(profileData, []string{vars})
+				cterror.Check(err)
+				profiles.SaveProfileWithKey(newProfileInfo, false, profileData, deployCmdEncryptionKey)
+				profiles.Save()
+			}
 
 			tmpfile, err := ioutil.TempFile("", "profiles")
 			cterror.Check(err)

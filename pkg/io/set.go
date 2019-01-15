@@ -6,6 +6,14 @@ func NewStringSet() StringSet {
 	return StringSet(make(map[string]struct{}))
 }
 
+func NewStringSetFromSlice(s []string) StringSet {
+	res := NewStringSet()
+	for _, str := range s {
+		res.Add(str)
+	}
+	return res
+}
+
 func (s StringSet) Add(key string) {
 	s[key] = struct{}{}
 }

@@ -11,3 +11,6 @@ set-raas:
 
 set-raas-force:
 	hack/setup_raas setup --overwrite
+
+rm-raas:
+	hack/setup_raas teardown

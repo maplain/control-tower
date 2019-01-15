@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
@@ -28,7 +29,7 @@ const (
 
 type Profile struct {
 	Name         string
-	TemplateKeys map[templates.TemplateType][]string
+	TemplateKeys map[templates.TemplateType]io.Values
 	Tags         Tags
 	Path         string
 }
@@ -37,12 +38,42 @@ func (p Profile) IsTemplate() bool {
 	if p.TemplateKeys == nil {
 		return false
 	}
-	for _, keys := range p.TemplateKeys {
-		if len(keys) != 0 {
+	for _, values := range p.TemplateKeys {
+		if len(values) != 0 {
 			return true
 		}
 	}
 	return false
+}
+
+func (p Profile) PopulateTemplate() (Profile, string, error) {
+	res := Profile{}
+	vars := io.NewValues()
+	println("you are referecing a templated template. please provide values for following keys:")
+	for _, values := range p.TemplateKeys {
+		populated := io.InteractivePopulateStringValues(values)
+		vars.AddValues(populated)
+	}
+	println("above values will be saved in a new profile")
+	k := "name of the new profile"
+	t := "tag of the new profile(comma seperated strings)"
+	newProfileInfo := io.InteractivePopulateStringValues(io.NewValuesFromStringSlice([]string{k, t}))
+	res.Name, _ = newProfileInfo.GetValue(k)
+	path, err := getProfilePath(res.Name)
+	if err != nil {
+		return res, "", err
+	}
+	res.Path = path
+
+	tagstr, _ := newProfileInfo.GetValue(t)
+	tags := strings.Split(tagstr, ",")
+	res.Tags = Tags{io.NewStringSetFromSlice(tags)}
+
+	d, err := yaml.Marshal(&vars)
+	if err != nil {
+		return res, "", err
+	}
+	return res, string(d), nil
 }
 
 type NamedProfiles map[string]Profile
@@ -120,6 +151,42 @@ func (p Profiles) LoadProfileByName(name, key string) (string, error) {
 	return d, err
 }
 
+func (p Profiles) RemoveTagForProfile(name string, tag string) error {
+	profile, err := p.GetProfileInfoByName(name)
+	if err != nil {
+		return err
+	}
+	if profile.Tags.StringSet != nil {
+		profile.Tags.Remove(tag)
+	}
+
+	values, found := p.TagedProfiles[tag]
+	if found {
+		values.Remove(profile.Name)
+		p.TagedProfiles[tag] = values
+	}
+	return nil
+}
+
+func (p Profiles) AddTagForProfile(name string, tag string) error {
+	profile, err := p.GetProfileInfoByName(name)
+	if err != nil {
+		return err
+	}
+	if profile.Tags.StringSet == nil {
+		profile.Tags = NewTags()
+	}
+	profile.Tags.Add(tag)
+
+	values, found := p.TagedProfiles[tag]
+	if !found {
+		p.TagedProfiles[tag] = io.NewStringSet()
+	}
+	values.Add(profile.Name)
+	p.TagedProfiles[tag] = values
+	return nil
+}
+
 // readProfileFile reads in profile content by profile path and a decryption key
 func readProfileFile(path, key string) (string, error) {
 	ed, err := io.ReadFromFile(path)
@@ -166,6 +233,26 @@ func (p Profiles) SaveProfileInfo(profile Profile, overwrite bool) error {
 			p.TagedProfiles[t] = io.NewStringSet()
 		}
 		p.TagedProfiles[t].Add(profile.Name)
+	}
+
+	return nil
+}
+
+func (p Profiles) SaveProfileWithKey(profile Profile, overwrite bool, data, key string) error {
+	err := p.SaveProfileInfo(profile, overwrite)
+	if err != nil {
+		return err
+	}
+
+	ed, err := secret.Encrypt(data, key)
+	if err != nil {
+		return err
+	}
+
+	// persist profile on disk
+	err = io.WriteToFile(ed, p.NamedProfiles[profile.Name].Path)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -297,8 +384,8 @@ func initializeProfileControlInfo() (Profiles, error) {
 
 		keys := templates.AllUniqueKeysInBoshTemplate(data)
 		if len(keys) != 0 {
-			p.TemplateKeys = make(map[templates.TemplateType][]string)
-			p.TemplateKeys[templates.BoshTemplateType] = keys
+			p.TemplateKeys = make(map[templates.TemplateType]io.Values)
+			p.TemplateKeys[templates.BoshTemplateType] = io.NewValuesFromStringSlice(keys)
 		}
 
 		res.NamedProfiles[profileName] = p

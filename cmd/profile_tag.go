@@ -38,21 +38,19 @@ ct profile tag -n deploy-kubo -t=kubo`,
 		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
 
-		p, err := profiles.GetProfileInfoByName(profileTagCmdProfileName)
-		cterror.Check(err)
-
-		if p.Tags.StringSet == nil {
-			p.Tags = config.NewTags()
-		}
 		for _, tag := range profileTagCmdTags {
-			p.Tags.Add(tag)
+			err = profiles.AddTagForProfile(profileTagCmdProfileName, tag)
+			cterror.Check(err)
 		}
 		for _, tag := range profileTagCmdDeleteTags {
-			p.Tags.Remove(tag)
+			err = profiles.RemoveTagForProfile(profileTagCmdProfileName, tag)
+			cterror.Check(err)
 		}
-		profiles.SaveProfileInfo(p, config.OverwriteExistingProfile)
 
 		err = profiles.Save()
+		cterror.Check(err)
+
+		p, err := profiles.GetProfileInfoByName(profileTagCmdProfileName)
 		cterror.Check(err)
 
 		tagString := p.Tags.String()

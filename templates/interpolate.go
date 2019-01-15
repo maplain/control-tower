@@ -24,23 +24,30 @@ func Interpolate(configFile string, varFiles []string) (string, error) {
 		return "", err
 	}
 
-	var params []boshtemplate.Variables
+	vars := []string{}
 	for _, path := range varFiles {
 		templateVars, err := ioutil.ReadFile(path)
 		if err != nil {
 			return "", errors.Wrap(errors.Wrap(err, path), "during interpolation")
 		}
+		vars = append(vars, string(templateVars[:]))
+	}
+	return InterpolateContent(string(config), vars)
+}
 
+func InterpolateContent(config string, vars []string) (string, error) {
+	var params []boshtemplate.Variables
+	for _, templateVars := range vars {
 		var staticVars boshtemplate.StaticVariables
-		err = yaml.Unmarshal(templateVars, &staticVars)
+		err := yaml.Unmarshal([]byte(templateVars), &staticVars)
 		if err != nil {
-			return "", errors.Wrap(errors.Wrap(err, path), "during interpolation")
+			return "", errors.Wrap(err, "during interpolation")
 		}
 		params = append(params, staticVars)
 	}
 
 	// call Resolve with expectAllKeys=true
-	res, err := NewTemplateResolver(config, params).Resolve(true)
+	res, err := NewTemplateResolver([]byte(config), params).Resolve(true)
 	if err != nil {
 		return "", err
 	}

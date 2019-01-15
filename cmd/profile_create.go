@@ -99,8 +99,8 @@ deployment, ct will interactively prompt you to fill in templated values`,
 		p := config.Profile{
 			Name: profileName,
 			Tags: tags,
-			TemplateKeys: map[templates.TemplateType][]string{
-				templates.BoshTemplateType: keys,
+			TemplateKeys: map[templates.TemplateType]io.Values{
+				templates.BoshTemplateType: io.NewValuesFromStringSlice(keys),
 			},
 		}
 		err = profiles.SaveProfile(p, overwrite, ed)

@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"sort"
 	"strconv"
 
 	"github.com/maplain/control-tower/pkg/config"
@@ -45,6 +46,7 @@ ct profile list.`,
 		} else {
 			ps = profiles.GetProfileInfos()
 		}
+		sort.Slice(ps, func(i, j int) bool { return ps[i].Name < ps[j].Name })
 		for _, p := range ps {
 			entries = append(entries, []string{p.Name, p.Tags.String(), strconv.FormatBool(p.IsTemplate())})
 		}

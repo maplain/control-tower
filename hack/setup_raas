@@ -74,7 +74,7 @@ setup() {
     # create raas-variables profile as a template profile so that each time you use it, you'll be asked
     # about values you want put in
     echo "adding ${raas_variable_file}"
-    ct profile create --var-file=<(ct template convert -t <(sed '/^<%$/,/^%>$/d' ${raas_variable_file}.yml )) -n ${raas_variable_file} --tag ${releng_profile_tag} --template ${overwrite}
+    ct profile create --var-file=<(ct template convert -t <(sed '/^<%$/,/^%>$/d' ${raas_variable_file}.yml )) -n ${raas_variable_file} --tag ${releng_profile_tag}-template --template ${overwrite}
   popd 2>&1 >/dev/null
 
 }

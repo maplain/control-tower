@@ -59,21 +59,21 @@ const (
 )
 
 var profileRegistry map[string]io.Values = map[string]io.Values{
-	DeployKuboProfileType: map[string]string{
-		"kubeconfig-bucket":                "vmw-pks-pipeline-store",
-		"kubeconfig-folder":                "pks-networking-kubeconfigs",
-		"pks-lock-branch":                  "master",
-		"pks-lock-pool":                    "nsx",
-		"pks-nsx-t-release-branch":         "master",
-		"pks-nsx-t-release-tarball-bucket": "vmw-pks-pipeline-store",
-		"pks-nsx-t-release-tarball-path":   "pks-nsx-t/pks-nsx-t-(.*).tgz",
-		"lock-name":                        "", // required
+	DeployKuboProfileType: map[string]io.UserInput{
+		"kubeconfig-bucket":                io.UserInput{Value: "vmw-pks-pipeline-store"},
+		"kubeconfig-folder":                io.UserInput{Value: "pks-networking-kubeconfigs"},
+		"pks-lock-branch":                  io.UserInput{Value: "master"},
+		"pks-lock-pool":                    io.UserInput{Value: "nsx"},
+		"pks-nsx-t-release-branch":         io.UserInput{Value: "master"},
+		"pks-nsx-t-release-tarball-bucket": io.UserInput{Value: "vmw-pks-pipeline-store"},
+		"pks-nsx-t-release-tarball-path":   io.UserInput{Value: "pks-nsx-t/pks-nsx-t-(.*).tgz"},
+		"lock-name":                        io.UserInput{}, // required
 	},
-	NsxAcceptanceTestsProfileType: map[string]string{
-		"kubeconfig-bucket":        "vmw-pks-pipeline-store",
-		"kubeconfig-path":          "pks-networking-kubeconfigs/kubeconfig-(.*).tgz",
-		"pks-nsx-t-release-branch": "ci-improvements-proto",
-		"lock-name":                "", // required
+	NsxAcceptanceTestsProfileType: map[string]io.UserInput{
+		"kubeconfig-bucket":        io.UserInput{Value: "vmw-pks-pipeline-store"},
+		"kubeconfig-path":          io.UserInput{Value: "pks-networking-kubeconfigs/kubeconfig-(.*).tgz"},
+		"pks-nsx-t-release-branch": io.UserInput{Value: "ci-improvements-proto"},
+		"lock-name":                io.UserInput{}, // required
 	},
 }
 
