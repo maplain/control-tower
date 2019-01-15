@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -38,6 +39,7 @@ func Interpolate(configFile string, varFiles []string) (string, error) {
 		params = append(params, staticVars)
 	}
 
+	// call Resolve with expectAllKeys=true
 	res, err := NewTemplateResolver(config, params).Resolve(true)
 	if err != nil {
 		return "", err
@@ -61,13 +63,8 @@ func NewTemplateResolver(configPayload []byte, params []boshtemplate.Variables) 
 
 func (resolver TemplateResolver) Resolve(expectAllKeys bool) ([]byte, error) {
 	var err error
-
 	resolver.configPayload, err = resolver.resolve(expectAllKeys)
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.configPayload, nil
+	return resolver.configPayload, err
 }
 
 func (resolver TemplateResolver) resolve(expectAllKeys bool) ([]byte, error) {
@@ -101,6 +98,20 @@ const (
 	RubyTemplateType              = "ruby"
 )
 
+func ConvertTemplate(data string, from TemplateType, to TemplateType) (string, error) {
+	if from == RubyTemplateType {
+		if to == BoshTemplateType {
+			return convertRubyTemplateToBosh(data), nil
+		}
+	}
+	return "", errors.Wrap(UnsupportedTemplateType, fmt.Sprintf("from %s to %s", from, to))
+}
+
+func convertRubyTemplateToBosh(data string) string {
+	res := interpolationRegexRuby.ReplaceAll([]byte(data), []byte("(($1))"))
+	return string(res[:])
+}
+
 func AllUniqueKeys(data string, templateType TemplateType) ([]string, error) {
 	switch templateType {
 	case BoshTemplateType:
@@ -116,7 +127,7 @@ func AllUniqueKeysInRubyTemplate(data string) []string {
 	names := make(map[string]struct{})
 
 	for _, match := range interpolationRegexRuby.FindAllSubmatch([]byte(data), -1) {
-		names[strings.TrimPrefix(string(match[1]), "!")] = struct{}{}
+		names[string(match[1])] = struct{}{}
 	}
 
 	var res []string

@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 
@@ -108,6 +109,7 @@ deployment, ct will interactively prompt you to fill in templated values`,
 			switch errors.Cause(err) {
 			case config.ProfileAlreadyExistError:
 				fmt.Printf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName)
+				os.Exit(0)
 			default:
 				cterror.Check(err)
 			}
@@ -116,7 +118,7 @@ deployment, ct will interactively prompt you to fill in templated values`,
 		err = profiles.Save()
 		cterror.Check(err)
 
-		fmt.Printf("profile %s is created successfully", profileName)
+		fmt.Printf("profile %s is created successfully\n", profileName)
 	},
 }
 

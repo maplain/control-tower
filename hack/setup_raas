@@ -1,0 +1,117 @@
+#!/bin/bash
+
+set -euo pipefail
+
+secret_files=("raas-credentials" "nsx-t-secrets" "pks-releng-write-locks-bot")
+iaas_secret_file="vsphere-nsx-variables"
+raas_variable_file="raas-variables"
+
+setup_dir() {
+  target=${1:?}
+  repo_url=${2:?}
+
+  if [ ! -d ${target} ]; then
+    echo "${target} does not exist, cloning it"
+    parent="$(dirname ${target})"
+    mkdir -p ${parent}
+    git clone ${repo_url} ${target}
+  else
+    pushd ${target} 2>&1 >/dev/null
+      echo "trying to stash ${target}"
+      echo "you local change will be stashed, use \`git stash apply\` to restore"
+      git stash
+      echo ""
+
+      echo "pulling latest ${target}"
+      git pull
+      echo ""
+    popd 2>&1 >/dev/null
+  fi
+}
+
+setup_usage() {
+  echo "usage: setup_raas setup [--overwrite]"
+}
+
+setup() {
+  local overwrite=${1:-""}
+  case ${overwrite} in
+    "--overwrite"*)
+      ;;
+    "")
+      ;;
+    *)
+      setup_usage
+      exit 1
+      ;;
+  esac
+  RAAS_SECRETS_DIR=$GOPATH/src/github.com/pivotal-cf/raas-secrets
+  RAAS_REPO=git@github.com:pivotal-cf/raas-secrets.git
+
+  PKS_RELENG_CI_DIR=$GOPATH/src/github.com/pivotal-cf/pks-releng-ci
+  PKS_RELENG_CI_REPO=git@github.com:pivotal-cf/pks-releng-ci.git
+
+  releng_profile_tag="releng"
+
+  setup_dir ${RAAS_SECRETS_DIR} ${RAAS_REPO}
+  setup_dir ${PKS_RELENG_CI_DIR} ${PKS_RELENG_CI_REPO}
+
+  echo -n "Enter vault password:"
+  read -s vault_password
+  echo
+
+  pushd ${RAAS_SECRETS_DIR} 2>&1 >/dev/null
+    for f in "${secret_files[@]}"; do
+      echo "adding ${f}"
+      ct profile create --var-file=<(ansible-vault decrypt --vault-password-file <(echo "${vault_password}") --output - ${f}.yml) -n ${f} --tag ${releng_profile_tag} ${overwrite}
+    done
+  popd 2>&1 >/dev/null
+
+  pushd ${PKS_RELENG_CI_DIR} 2>&1 >/dev/null
+    echo "adding ${iaas_secret_file}"
+    ct profile create --var-file="${iaas_secret_file}.yml" -n "${iaas_secret_file}" --tag ${releng_profile_tag} ${overwrite}
+
+    # create raas-variables profile as a template profile so that each time you use it, you'll be asked
+    # about values you want put in
+    echo "adding ${raas_variable_file}"
+    ct profile create --var-file=<(ct template convert -t <(sed '/^<%$/,/^%>$/d' ${raas_variable_file}.yml )) -n ${raas_variable_file} --tag ${releng_profile_tag} --template ${overwrite}
+  popd 2>&1 >/dev/null
+
+}
+
+teardown() {
+  for f in "${secret_files[@]}"; do
+    ct profile delete -n ${f}
+  done
+  ct profile delete -n ${iaas_secret_file}
+  ct profile delete -n ${raas_variable_file}
+}
+
+usage() {
+  echo "usage:"
+  echo -e "\tsetup_raas setup"
+  echo -e "\tsetup_raas teardown"
+}
+
+main() {
+  if [ ${#@} -le 0 ]; then
+    usage
+    exit 1
+  fi
+  local subcmd=${1}
+  shift
+  case ${subcmd} in
+    "setup"*)
+      setup "$@"
+      ;;
+    "teardown"*)
+      teardown "$@"
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

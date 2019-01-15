@@ -41,7 +41,7 @@ var deleteCmd = &cobra.Command{
 		err = profiles.Save()
 		cterror.Check(err)
 
-		fmt.Printf("profile %s is deleted successfully", profileDeleteName)
+		fmt.Printf("profile %s is deleted successfully\n", profileDeleteName)
 	},
 }
 
