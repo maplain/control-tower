@@ -20,8 +20,9 @@ import (
 
 // flyCmd represents the fly command
 var flyCmd = &cobra.Command{
-	Use:   "f",
-	Short: "concourse fly complementary utility",
+	Use:     "fly",
+	Aliases: []string{"f"},
+	Short:   "concourse fly complementary utility",
 }
 
 func init() {

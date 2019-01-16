@@ -272,7 +272,7 @@ jobs:
   plan:
   - put: pks-lock
     params:
-      claim: ((lock-name))
+      acquire: true
   <<: *notify_failure
 
 - name: outputs
@@ -368,7 +368,7 @@ jobs:
   plan:
   - put: pks-lock
     params:
-      claim: ((lock-name))
+      acquire: true
   <<: *notify_failure
 
 - name: delete-kubo

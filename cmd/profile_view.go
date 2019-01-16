@@ -29,8 +29,9 @@ var (
 
 // viewCmd represents the view command
 var viewCmd = &cobra.Command{
-	Use:   "v",
-	Short: "view contents of a profile",
+	Use:     "view",
+	Aliases: []string{"v"},
+	Short:   "view contents of a profile",
 	Long: `Examples:
 
 ct profile view -n deploy-kubo --key=1234567891123456`,

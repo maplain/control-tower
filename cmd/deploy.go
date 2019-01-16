@@ -53,8 +53,9 @@ var (
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
-	Use:   "d",
-	Short: "deploys a pipeline with template specified and parameters saved in a profile",
+	Use:     "deploy",
+	Aliases: []string{"d", "dp"},
+	Short:   "deploys a pipeline with template specified and parameters saved in a profile",
 	Long: `Examples:
 
 ct deploy -t deploy-kubo -p deploy-kubo`,

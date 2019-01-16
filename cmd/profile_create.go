@@ -41,8 +41,9 @@ var (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "c",
-	Short: "create a profile",
+	Use:     "create",
+	Aliases: []string{"c"},
+	Short:   "create a profile",
 	Long: `a profile can be created from key-value pairs, eg:
 ct profile create  --vars="a=b,c=d" --name=deploy-kubo
 
@@ -61,8 +62,26 @@ deployment, ct will interactively prompt you to fill in templated values`,
 		err := profileCreateValidate()
 		cterror.Check(err)
 
+		profiles, err := config.LoadProfileControlInfo()
+		cterror.Check(err)
+
+		// check existence firstly
+		_, err = profiles.GetProfileInfoByName(profileName)
+		if err != nil {
+			switch errors.Cause(err) {
+			case config.ProfileAlreadyExistError:
+				if !overwrite {
+					fmt.Printf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName)
+					os.Exit(0)
+				}
+			default:
+				cterror.Check(err)
+			}
+		}
+
 		var d []byte
 
+		// load vars
 		if profileType == "" {
 			if len(configurations) != 0 {
 				d, err = yaml.Marshal(&configurations)
@@ -77,6 +96,7 @@ deployment, ct will interactively prompt you to fill in templated values`,
 			cterror.Check(err)
 		}
 
+		// check if template type profile has any key
 		var keys []string
 		if profileCreateIsTemplateType {
 			keys = templates.AllUniqueKeysInBoshTemplate(string(d[:]))
@@ -86,9 +106,6 @@ deployment, ct will interactively prompt you to fill in templated values`,
 		}
 
 		ed, err := secret.Encrypt(string(d[:]), encryptionKey)
-		cterror.Check(err)
-
-		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
 
 		tags := config.NewTags()
@@ -104,16 +121,7 @@ deployment, ct will interactively prompt you to fill in templated values`,
 			},
 		}
 		err = profiles.SaveProfile(p, overwrite, ed)
-
-		if err != nil {
-			switch errors.Cause(err) {
-			case config.ProfileAlreadyExistError:
-				fmt.Printf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName)
-				os.Exit(0)
-			default:
-				cterror.Check(err)
-			}
-		}
+		cterror.Check(err)
 
 		err = profiles.Save()
 		cterror.Check(err)

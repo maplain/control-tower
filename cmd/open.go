@@ -24,8 +24,9 @@ import (
 
 // openCmd represents the open command
 var openCmd = &cobra.Command{
-	Use:   "o",
-	Short: "open in use fly context",
+	Use:     "open",
+	Aliases: []string{"o"},
+	Short:   "open in use fly context",
 	Long: `usage:
 	ct o [context name]`,
 	Run: func(cmd *cobra.Command, args []string) {

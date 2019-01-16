@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/concourse/fly/rc"
 	"github.com/maplain/control-tower/pkg/concourseclient"
@@ -26,18 +25,15 @@ import (
 )
 
 var (
-	flyTriggerWatch bool
+	flyTriggerWatch   bool
+	flyTriggerJobName string
 )
 
 var flyTriggerCmd = &cobra.Command{
 	Use:   "trigger",
 	Short: "trigger a job build",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			fmt.Println("ct fly trigger [job name]")
-			os.Exit(1)
-		}
-		jobName := args[0]
+		jobName := flyTriggerJobName
 
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
@@ -57,7 +53,7 @@ var flyTriggerCmd = &cobra.Command{
 				return
 			}
 		}
-		fmt.Printf("%s does not exist in pipeline %s", jobName, inusectx.Pipeline)
+		fmt.Printf("%s does not exist in pipeline %s\n", jobName, inusectx.Pipeline)
 
 		displayJobs(jobs)
 	},
@@ -66,4 +62,6 @@ var flyTriggerCmd = &cobra.Command{
 func init() {
 	flyCmd.AddCommand(flyTriggerCmd)
 	flyTriggerCmd.Flags().BoolVarP(&flyTriggerWatch, "watch", "w", false, "watch job build logs")
+	flyTriggerCmd.Flags().StringVarP(&flyTriggerJobName, "job", "j", "", "job name")
+	flyTriggerCmd.MarkFlagRequired("job")
 }

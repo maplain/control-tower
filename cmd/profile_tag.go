@@ -30,8 +30,9 @@ var (
 
 // profileTagCmd represents the view command
 var profileTagCmd = &cobra.Command{
-	Use:   "t",
-	Short: "tag a profile",
+	Use:     "tag",
+	Aliases: []string{"t"},
+	Short:   "tag a profile",
 	Long: `Examples:
 ct profile tag -n deploy-kubo -t=kubo`,
 	Run: func(cmd *cobra.Command, args []string) {

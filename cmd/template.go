@@ -20,8 +20,9 @@ import (
 
 // templateCmd represents the template command
 var templateCmd = &cobra.Command{
-	Use:   "tp",
-	Short: "manages templates",
+	Use:     "template",
+	Aliases: []string{"tp", "t"},
+	Short:   "manages templates",
 }
 
 func init() {

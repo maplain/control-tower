@@ -30,8 +30,9 @@ var (
 
 // profileCmd represents the profile command
 var profileCmd = &cobra.Command{
-	Use:   "p",
-	Short: "manages profiles, i.e: configurations for pipelines",
+	Use:     "profile",
+	Aliases: []string{"p"},
+	Short:   "manages profiles, i.e: configurations for pipelines",
 }
 
 func init() {
@@ -41,7 +42,7 @@ func init() {
 }
 
 const (
-	DeployKuboProfileType         = "deploy-kubo"
+	DeployKuboProfileType         = "kubo"
 	NsxAcceptanceTestsProfileType = "nsx-acceptance-tests"
 
 	TypeNotSupportedError = cterror.Error("pipeline type is not supported")
@@ -56,7 +57,7 @@ var profileRegistry map[string]io.Values = map[string]io.Values{
 		"pks-nsx-t-release-branch":         io.UserInput{Value: "master"},
 		"pks-nsx-t-release-tarball-bucket": io.UserInput{Value: "vmw-pks-pipeline-store"},
 		"pks-nsx-t-release-tarball-path":   io.UserInput{Value: "pks-nsx-t/pks-nsx-t-(.*).tgz"},
-		"lock-name":                        io.UserInput{}, // required
+		//"lock-name":                        io.UserInput{}, // required
 	},
 	NsxAcceptanceTestsProfileType: map[string]io.UserInput{
 		"kubeconfig-bucket":        io.UserInput{Value: "vmw-pks-pipeline-store"},

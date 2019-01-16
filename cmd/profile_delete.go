@@ -28,8 +28,9 @@ var (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "d",
-	Short: "delete a profile",
+	Use:     "delete",
+	Aliases: []string{"d"},
+	Short:   "delete a profile",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := profileDeleteValidate()
 		cterror.Check(err)

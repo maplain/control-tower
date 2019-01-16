@@ -239,6 +239,21 @@ func (p Profiles) SaveProfileInfo(profile Profile, overwrite bool) error {
 	return nil
 }
 
+func (p Profiles) UpdateProfileData(name string, data, key string) error {
+	ed, err := secret.Encrypt(data, key)
+	if err != nil {
+		return err
+	}
+
+	// persist profile on disk
+	err = io.WriteToFile(ed, p.NamedProfiles[name].Path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (p Profiles) SaveProfileWithKey(profile Profile, overwrite bool, data, key string) error {
 	err := p.SaveProfileInfo(profile, overwrite)
 	if err != nil {

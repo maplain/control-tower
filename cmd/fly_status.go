@@ -15,9 +15,9 @@
 package cmd
 
 import (
+	"sort"
 	"strconv"
 
-	"github.com/concourse/atc"
 	"github.com/concourse/fly/rc"
 	"github.com/maplain/control-tower/pkg/concourseclient"
 	"github.com/maplain/control-tower/pkg/config"
@@ -26,9 +26,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var flyJobsCmd = &cobra.Command{
-	Use:     "jobs",
-	Aliases: []string{"j"},
+var (
+	flyStatusCmdBuildNum int
+)
+
+var flyStatusCmd = &cobra.Command{
+	Use:     "status",
+	Aliases: []string{"ss", "s"},
+	Short:   "builds of a job",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
@@ -38,29 +43,34 @@ var flyJobsCmd = &cobra.Command{
 		cli, err := concourseclient.NewConcourseClient(rc.TargetName(inusectx.Target))
 		cterror.Check(err)
 
+		if flyStatusCmdBuildNum > concourseclient.QueryBuildLimit {
+			flyStatusCmdBuildNum = concourseclient.QueryBuildLimit
+		}
+
 		jobs, err := cli.Team().ListJobs(inusectx.Pipeline)
 		cterror.Check(err)
 
-		err = displayJobs(jobs)
-		cterror.Check(err)
+		for _, job := range jobs {
+			builds, err := cli.LatestJobBuilds(inusectx.Team, inusectx.Pipeline, job.Name, flyStatusCmdBuildNum)
+			cterror.Check(err)
+
+			if len(builds) == 0 {
+				continue
+			}
+			var data [][]string
+			sort.Slice(builds, func(i, j int) bool { return builds[i].ID < builds[j].ID })
+			for _, b := range builds {
+				data = append(data, []string{strconv.Itoa(b.ID), b.TeamName, b.Name, b.Status, b.JobName})
+			}
+			header := []string{"ID", "Team", "Name", "Status", "Job"}
+
+			p, err := io.NewPrinter(outputFormat)
+			p.Display(!outputNoHeader, data, header)
+		}
 	},
 }
 
-func displayJobs(jobs []atc.Job) error {
-	p, err := io.NewPrinter(outputFormat)
-	if err != nil {
-		return err
-	}
-
-	data := [][]string{}
-	for _, job := range jobs {
-		data = append(data, []string{strconv.Itoa(job.ID), job.Name})
-	}
-
-	p.Display(!outputNoHeader, data, []string{"ID", "Name"})
-	return nil
-}
-
 func init() {
-	flyCmd.AddCommand(flyJobsCmd)
+	flyCmd.AddCommand(flyStatusCmd)
+	flyStatusCmd.Flags().IntVarP(&flyStatusCmdBuildNum, "num", "n", 5, "number of builds to display(maximum: 20)")
 }

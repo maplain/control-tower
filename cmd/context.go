@@ -20,8 +20,9 @@ import (
 
 // contextCmd represents the context command
 var contextCmd = &cobra.Command{
-	Use:   "c",
-	Short: "manages fly contexts",
+	Use:     "context",
+	Aliases: []string{"c", "ctx"},
+	Short:   "manages fly contexts",
 }
 
 func init() {
