@@ -1,3 +1,6 @@
+package templates
+
+var BuildTileTemplate = `
 resource_types:
 - name: gcs-resource
   source:
@@ -125,3 +128,4 @@ jobs:
         file: build/pivotal-container-service-*.pivotal
       put: untested-tile
   serial: true
+`

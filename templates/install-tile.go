@@ -1,3 +1,6 @@
+package templates
+
+var InstallTileTemplate = `
 ---
 release_lock: &release_lock
   put: environment-lock
@@ -346,3 +349,5 @@ jobs:
   - get: environment-lock
     passed: [ 'configure-and-deploy-tile' ]
   - <<: *release_lock
+
+`

@@ -207,3 +207,30 @@ func InteractivePopulateStringValues(inputs Values) Values {
 	}
 	return res
 }
+
+type Remover func()
+
+// WriteToTempFile will create a temporary file, write data in it and return
+// tmp file's name, a lambda which removes this temporary file and an error
+// caller needs to call Remover() after reading tmpfile
+func WriteToTempFile(data string, dir, prefix string) (string, Remover, error) {
+	tmpfile, err := ioutil.TempFile(dir, prefix)
+	if err != nil {
+		return "", nil, err
+	}
+	// clean up
+	remover := func() {
+		os.Remove(tmpfile.Name())
+	}
+
+	err = WriteToFile(data, tmpfile.Name())
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = tmpfile.Close()
+	if err != nil {
+		return "", nil, err
+	}
+	return tmpfile.Name(), remover, nil
+}

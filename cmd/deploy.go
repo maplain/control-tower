@@ -16,8 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/pkg/errors"
 
@@ -35,15 +33,20 @@ const (
 	flyPipelineFlag             = "--pipeline"
 	flyPipelineConfigFlag       = "--config"
 	flyPipelineLoadVarsFromFlag = "--load-vars-from"
+
+	ParameterMissingError = cterror.Error("parameter missing")
 )
 
 var (
-	templatePath         string
+	templatePath string
+	templateType string
+
 	deployProfileNames   []string
 	deployProfilePaths   []string
 	deployCmdProfileTags []string
-	deployTarget         string
-	pipelineName         string
+
+	deployTarget string
+	pipelineName string
 
 	deployCmdEncryptionKey string
 )
@@ -71,6 +74,27 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 			}
 		}
 
+		if templatePath == "" {
+			if templateType != "" {
+				template, found := templates.SupportedTemplateType[templateType]
+				if !found {
+					cterror.Check(errors.Wrap(templates.TemplateNotSupportedError, templateType))
+				}
+				tmpTemplateFile, remover, err := io.WriteToTempFile(template, "", "ct-deploy")
+				defer remover()
+				cterror.Check(err)
+
+				// set templatePath to this temporary file path
+				templatePath = tmpTemplateFile
+
+			} else {
+				cterror.Check(errors.Wrap(ParameterMissingError, "either --template or --template-type has to be provided"))
+			}
+		} else {
+			if templateType != "" {
+				cterror.Warnf("--template-type %s is overwritten by --template %s", templateType, templatePath)
+			}
+		}
 		dcmd := client.NewFlyCmd().
 			WithTarget(rc.TargetName(deployTarget)).
 			WithSubCommand(setPipelineCmd).
@@ -105,17 +129,11 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 				profiles.Save()
 			}
 
-			tmpfile, err := ioutil.TempFile("", "profiles")
-			cterror.Check(err)
-			// clean up
-			defer os.Remove(tmpfile.Name())
-
-			err = io.WriteToFile(profileData, tmpfile.Name())
-			cterror.Check(err)
-			err = tmpfile.Close()
+			tmpfile, remover, err := io.WriteToTempFile(profileData, "", "profiles")
+			defer remover()
 			cterror.Check(err)
 
-			dcmd.WithArg(flyPipelineLoadVarsFromFlag, tmpfile.Name())
+			dcmd.WithArg(flyPipelineLoadVarsFromFlag, tmpfile)
 		}
 
 		for _, path := range deployProfilePaths {
@@ -142,6 +160,7 @@ func deployCmdValidate() error {
 func init() {
 	rootCmd.AddCommand(deployCmd)
 
+	deployCmd.Flags().StringVarP(&templateType, "template-type", "t", "", "type of pipeline template")
 	deployCmd.Flags().StringVarP(&templatePath, "template", "m", "", "path to pipeline template")
 	deployCmd.Flags().StringVar(&deployTarget, "target", "", "fly target name")
 	deployCmd.Flags().StringSliceVarP(&deployProfileNames, "profile-name", "p", deployProfileNames, "profile name, can be used multiple times to specify many profiles to be used")
@@ -149,5 +168,4 @@ func init() {
 	deployCmd.Flags().StringSliceVar(&deployProfilePaths, "profile-path", nil, "profile path, can be used multiple times to specify many profile paths to be used")
 	deployCmd.Flags().StringVarP(&pipelineName, "pipeline-name", "n", "", "pipeline name you want to set")
 	deployCmd.Flags().StringVarP(&deployCmdEncryptionKey, "key", "k", config.DefaultEncryptionKey, "a key to encrypt templates and profiles, which has to be in length of 16, 24 or 32 bytes")
-	deployCmd.MarkFlagRequired("template")
 }

@@ -1,6 +1,7 @@
 package error
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -18,4 +19,12 @@ type Error string
 
 func (e Error) Error() string {
 	return string(e)
+}
+
+func Warn(w string) {
+	fmt.Printf("warning: %s\n", w)
+}
+
+func Warnf(format string, a ...interface{}) {
+	fmt.Printf("warning: "+format, a...)
 }

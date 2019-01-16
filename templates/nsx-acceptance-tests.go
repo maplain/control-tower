@@ -1,3 +1,6 @@
+package templates
+
+var NsxAcceptanceTestsTemplate = `
 ---
 notify_failure: &notify_failure
   on_failure:
@@ -316,3 +319,4 @@ jobs:
   - <<: *delete_kubo
 
   <<: *notify_failure
+`

@@ -1,4 +1,43 @@
+package templates
+
+var DeployKuboPipelineTemplate = `
 ---
+notify_failure: &notify_failure
+  on_failure:
+    put: notify
+    params:
+      channel: pks-ci-bots
+      attachments:
+      - color: danger
+        text: $BUILD_PIPELINE_NAME build failed. See results at <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
+
+notify_success: &notify_success
+  on_success:
+    put: notify
+    params:
+      channel:  pks-ci-bots
+      attachments:
+      - color: good
+        text: $BUILD_PIPELINE_NAME build succeeded <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
+
+release_pks_lock: &release_pks_lock
+  put: pks-lock
+  params:
+    release: pks-lock
+
+delete_kubo: &delete_kubo
+  task: delete-kubo
+  file: git-pks-ci/ci/tasks/delete-kubo.yml
+  input_mapping:
+    git-pks-ci: git-pks-ci
+    pks-lock: pks-lock
+    pks-release: gcs-pks-nsx-t-tarball-untested
+    kubo-deployment: kubo-deployment
+  params:
+    DEPLOYMENT_NAME: kubo-pks-nsx-t
+    CLEANUP_NSX: true
+    USE_NAT: false
+
 resource_types:
 - name: gcs
   type: docker-image
@@ -21,7 +60,6 @@ resources:
 
 # pks ci git repo
 - name: git-pks-ci
-  tags: [VMware]
   type: git
   source:
     uri: git@github.com:vmware/pks-ci.git
@@ -30,7 +68,6 @@ resources:
 
 # pks-networking git repo
 - name: git-pks-networking
-  tags: [VMware]
   type: git
   source:
     uri: git@gitlab.eng.vmware.com:PKS/pks-networking.git
@@ -39,7 +76,6 @@ resources:
 
 # pks-nsx-t-release git repo
 - name: git-pks-nsx-t-release
-  tags: [VMware]
   type: git
   source:
     uri: git@gitlab.eng.vmware.com:PKS/pks-nsx-t-release.git
@@ -48,7 +84,6 @@ resources:
 
 # pks-concourse git repo
 - name: pks-concourse
-  tags: [VMware]
   type: git
   source:
     uri: git@gitlab.eng.vmware.com:PKS/pks-concourse.git
@@ -66,7 +101,6 @@ resources:
 
 # test bed lock resource
 - name: pks-lock
-  tags: [VMware]
   type: pool
   source:
     uri: git@gitlab.eng.vmware.com:PKS/pks-locks.git
@@ -142,9 +176,18 @@ groups:
       - run-precheck-release-lock
       - deploy-kubo
       - deploy-kubo-release-lock
+
+  - name: outputs
+    jobs:
+      - outputs
+      - claim-lock-for-outputs
+      - outputs-release-lock
+
+  - name: delete-kubo
+    jobs:
+      - claim-lock-for-deletion
       - delete-kubo
       - delete-kubo-release-lock
-      - outputs
 
   - name: dev
     jobs:
@@ -153,12 +196,6 @@ groups:
       - deploy-kubo
       - delete-kubo
       - outputs
-
-  - name: maintenance
-    jobs:
-      - run-precheck-release-lock
-      - deploy-kubo-release-lock
-      - delete-kubo-release-lock
 
 ############################################
 # Jobs
@@ -169,30 +206,10 @@ jobs:
 - name: claim-lock-kubo
   serial: true
   plan:
-  - aggregate:
-    - get: git-pks-ci
-      tags: [VMware]
-    - get: git-pks-nsx-t-release
-      tags: [VMware]
-    - get: pks-nsx-t-version
-      tags: [VMware]
-    - get: gcs-pks-nsx-t-tarball-untested
-      tags: [VMware]
-
   - put: pks-lock
-    tags: [VMware]
     params:
-      claim: nsx3
-
-  
-  on_failure:
-    put: notify
-    tags: [VMware]
-    params:
-      channel: pks-ci-bots
-      attachments:
-      - color: danger
-        text: $BUILD_PIPELINE_NAME build failed. See results at <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
+      acquire: true
+  <<: *notify_failure
 
 
 - name: run-precheck-release-lock
@@ -201,12 +218,8 @@ jobs:
   serial: true
   plan:
   - get: pks-lock
-    tags: [VMware]
     passed: [ 'claim-lock-kubo' ]
-  - put: pks-lock
-    tags: [VMware]
-    params:
-      release: pks-lock
+  - <<: *release_pks_lock
 
 # Run precheck
 - name: run-precheck
@@ -216,32 +229,20 @@ jobs:
   plan:
   - aggregate:
     - get: git-pks-ci
-      tags: [VMware]
-      passed: [ 'claim-lock-kubo' ]
       trigger: true
     - get: git-pks-networking
-      tags: [VMware]
     - get: git-pks-nsx-t-release
-      tags: [VMware]
-      passed: [ 'claim-lock-kubo' ]
       trigger: true
     - get: pks-nsx-t-version
-      tags: [VMware]
-      passed: [ 'claim-lock-kubo' ]
       trigger: true
     - get: gcs-pks-nsx-t-tarball-untested
-      tags: [VMware]
-      passed: [ 'claim-lock-kubo' ]
     - get: pks-lock
-      tags: [VMware]
       passed: [ 'claim-lock-kubo' ]
       trigger: true
       version: every
     - get: ubuntu-xenial-stemcell
-      tags: [VMware]
 
   - task: run-precheck
-    tags: [VMware]
     file: git-pks-nsx-t-release/ci/tasks/run-pks-nsx-t-precheck.yml
     input_mapping:
       git-pks-ci: git-pks-ci
@@ -253,45 +254,52 @@ jobs:
     params:
       RELEASE_NAME: pks-nsx-t
       DEPLOYMENT_NAME: pks-nsx-t
-  
-  on_failure:
-    put: notify
-    tags: [VMware]
-    params:
-      channel: pks-ci-bots
-      attachments:
-      - color: danger
-        text: $BUILD_PIPELINE_NAME build failed. See results at <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
+
+  <<: *notify_failure
 
 
 - name: deploy-kubo-release-lock
   plan:
   - get: pks-lock
-    tags: [VMware]
     passed: [ 'deploy-kubo' ]
+  - <<: *release_pks_lock
+
+# Claim kubo test bed
+- name: claim-lock-for-outputs
+  serial: true
+  serial_groups:
+    - outputs
+  plan:
   - put: pks-lock
-    tags: [VMware]
     params:
-      release: pks-lock
+      claim: ((lock-name))
+  <<: *notify_failure
 
 - name: outputs
+  serial: true
+  serial_groups:
+    - outputs
   plan:
   - aggregate:
     - get: pks-lock
-      tags: [VMware]
-      passed: [ 'deploy-kubo' ]
+      passed: [ 'claim-lock-for-outputs' ]
       trigger: true
     - get: kubeconfig
-      tags: [VMware]
       passed: [ 'deploy-kubo' ]
       trigger: true
     - get: pks-concourse
-      tags: [VMware]
       trigger: true
   - task: outputs
-    tags: [VMware]
     file: pks-concourse/tasks/deploy-kubo-outputs.yml
 
+- name: outputs-release-lock
+  serial: true
+  serial_groups:
+    - outputs
+  plan:
+  - get: pks-lock
+    passed: [ 'claim-lock-for-outputs' ]
+  - <<: *release_pks_lock
 
 - name: deploy-kubo
   serial: true
@@ -300,41 +308,30 @@ jobs:
   plan:
   - aggregate:
     - get: git-pks-ci
-      tags: [VMware]
       passed: [ 'run-precheck' ]
       trigger: true
     - get: git-pks-nsx-t-release
-      tags: [VMware]
       passed: [ 'run-precheck' ]
       trigger: true
     - get: pks-nsx-t-version
-      tags: [VMware]
       passed: [ 'run-precheck' ]
       trigger: true
     - get: gcs-pks-nsx-t-tarball-untested
-      tags: [VMware]
       passed: [ 'run-precheck' ]
     - get: gcs-nsx-cf-cni-tarball
-      tags: [VMware]
       trigger: true
     - get: pks-lock
-      tags: [VMware]
       passed: [ 'run-precheck' ]
       version: every
       trigger: true
     - get: ubuntu-xenial-stemcell
-      tags: [VMware]
       passed: [ 'run-precheck' ]
     - get: github-kubo-deployment
-      tags: [VMware]
     - get: github-kubo-release
-      tags: [VMware]
     - put: kubeconfig-version
-      tags: [VMware]
       params: {bump: minor}
 
   - task: deploy-kubo
-    tags: [VMware]
     file: git-pks-ci/ci/tasks/deploy-kubo.yml
     input_mapping:
       git-pks-ci: git-pks-ci
@@ -356,49 +353,23 @@ jobs:
       CLEAN_UP_FAILED_RUNS: true
       USE_NAT: false
   - put: kubeconfig
-    tags: [VMware]
     params:
       file: kubo-deployment/kubeconfig-*.tgz
 
   on_failure:
-    
-      task: delete-kubo
-      tags: [VMware]
-      file: git-pks-ci/ci/tasks/delete-kubo.yml
-      input_mapping:
-        git-pks-ci: git-pks-ci
-        pks-lock: pks-lock
-        pks-release: gcs-pks-nsx-t-tarball-untested
-        kubo-deployment: kubo-deployment
-      params:
-        DEPLOYMENT_NAME: kubo-pks-nsx-t
-        CLEANUP_NSX: true
-        USE_NAT: false
-
+    <<: *delete_kubo
   on_abort:
-    
-      task: delete-kubo
-      tags: [VMware]
-      file: git-pks-ci/ci/tasks/delete-kubo.yml
-      input_mapping:
-        git-pks-ci: git-pks-ci
-        pks-lock: pks-lock
-        pks-release: gcs-pks-nsx-t-tarball-untested
-        kubo-deployment: kubo-deployment
-      params:
-        DEPLOYMENT_NAME: kubo-pks-nsx-t
-        CLEANUP_NSX: true
-        USE_NAT: false
+    <<: *delete_kubo
+  <<: *notify_success
 
-  
-  on_success:
-    put: notify
-    tags: [VMware]
+# Claim kubo test bed
+- name: claim-lock-for-deletion
+  serial: true
+  plan:
+  - put: pks-lock
     params:
-      channel:  pks-ci-bots
-      attachments:
-      - color: good
-        text: $BUILD_PIPELINE_NAME build succeeded <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
+      claim: ((lock-name))
+  <<: *notify_failure
 
 - name: delete-kubo
   serial: true
@@ -407,60 +378,36 @@ jobs:
   plan:
   - aggregate:
     - get: git-pks-ci
-      tags: [VMware]
       passed: [ 'deploy-kubo' ]
     - get: git-pks-nsx-t-release
-      tags: [VMware]
       passed: [ 'deploy-kubo' ]
     - get: pks-nsx-t-version
-      tags: [VMware]
       passed: [ 'deploy-kubo' ]
     - get: gcs-pks-nsx-t-tarball-untested
-      tags: [VMware]
       passed: [ 'deploy-kubo' ]
     - get: gcs-nsx-cf-cni-tarball
-      tags: [VMware]
     - get: pks-lock
-      tags: [VMware]
-      passed: [ 'deploy-kubo' ]
+      passed: [ 'claim-lock-for-deletion' ]
       version: every
     - get: kubeconfig
-      tags: [VMware]
       passed: [ 'deploy-kubo' ]
-
   - task: delete-kubo
-    tags: [VMware]
     file: git-pks-ci/ci/tasks/delete-kubo.yml
     input_mapping:
       git-pks-ci: git-pks-ci
       pks-lock: pks-lock
       pks-release: gcs-pks-nsx-t-tarball-untested
-      ncp-release: gcs-nsx-cf-cni-tarball
       kubo-deployment: kubeconfig
     params:
       DEPLOYMENT_NAME: kubo-pks-nsx-t
       CLEANUP_NSX: true
       USE_NAT: false
+
     on_failure:
-      put: pks-lock
-      tags: [VMware]
-      params:
-        release: pks-lock
+      <<: *release_pks_lock
     on_abort:
-      tags: [VMware]
-      put: pks-lock
-      params:
-        release: pks-lock
-
-  on_failure:
-    put: notify
-    tags: [VMware]
-    params:
-      channel: pks-ci-bots
-      attachments:
-      - color: danger
-        text: $BUILD_PIPELINE_NAME build failed. See results at <https://((ci_url))/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME>
-
+      <<: *release_pks_lock
+  <<: *notify_failure
 
 - name: delete-kubo-release-lock
   serial: true
@@ -468,9 +415,6 @@ jobs:
     - delete-kubo
   plan:
   - get: pks-lock
-    tags: [VMware]
-    passed: [ 'deploy-kubo' ]
-  - put: pks-lock
-    tags: [VMware]
-    params:
-      release: pks-lock
+    passed: [ 'claim-lock-for-deletion' ]
+  - <<: *release_pks_lock
+`

@@ -99,6 +99,7 @@ func GetContextsFilepath() (string, error) {
 	return path.Join(home, contextFilename), nil
 }
 
+// LoadInUseContext returns all contexts, in use context name and potential error
 func LoadInUseContext() (Contexts, string, error) {
 	ctx, err := LoadContexts()
 	if err != nil {
