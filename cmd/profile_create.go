@@ -74,6 +74,8 @@ deployment, ct will interactively prompt you to fill in templated values`,
 					fmt.Printf("profile with name %s already exists, set --overwrite if you want to overwrite it\n", profileName)
 					os.Exit(0)
 				}
+			case config.ProfileNotExistError:
+				break
 			default:
 				cterror.Check(err)
 			}

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 secret_files=("common-secrets" "pks-nsx-t-release-secrets")
-deploy_kubo_profile="deploy-kubo-$(whoami)"
+deploy_kubo_profile="kubo-$(whoami)"
 
 setup_dir() {
   target=${1:?}
@@ -76,8 +76,8 @@ setup() {
   popd 2>&1 >/dev/null
 
   if [ "${skip}" != "--skip" ]; then
-    echo "deploy-kubo profile name ${deploy_kubo_profile}"
-    ct profile create --type deploy-kubo -n ${deploy_kubo_profile} ${overwrite} --tag ${profile_tag}
+    echo "kubo profile name ${deploy_kubo_profile}"
+    ct profile create --type kubo -n ${deploy_kubo_profile} ${overwrite} --tag ${profile_tag}
   fi
 }
 
