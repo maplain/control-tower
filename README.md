@@ -2,8 +2,8 @@
 - [Profile](#profile)
   -  [Tags](#tags)
 - [Context](#context)
-- [Kubo related Pipelines](#kubo-releted-pipelines)
-- [RAAS related Pipelines](#raas-releted-pipelines)
+- [Kubo Related Pipelines](#kubo-related-pipelines)
+- [RAAS Related Pipelines](#raas-related-pipelines)
 
 # Control Tower
 Control Tower aims to provide a better abstraction over Concourse pipelines so that it's easier to manage and fly. For now, it's used internally in PKS networking team. Thus some commands are only available for a few built-in type of pipelines.
@@ -17,6 +17,11 @@ git clone https://github.com/maplain/control-tower
 make build-ct
 ```
 ct will be built under `bin`. You may want to optionally move it under your `$PATH`.
+
+Or you can simply do a:
+```sh
+make build
+```
 
 # Concepts
 ## Profile
@@ -198,7 +203,7 @@ lock-name: nsx3
 
 The `outputs` for type `kubo` pipeline is defined to be a key-value yaml file so that it can be directly piped into another command's input. See examples below.
 
-## Kubo related Pipelines
+## Kubo Related Pipelines
 To setup kubo-related profiles automatically:
 ```sh
 make set-kubo
@@ -227,7 +232,7 @@ pushd $GOPATH/src/gitlab.eng.vmware.com/PKS/pks-nsx-t-release
 popd
 ```
 
-## RAAS related Pipelines
+## RAAS Related Pipelines
 To setup raas-related profiles automatically:
 ```sh
 make set-raas
