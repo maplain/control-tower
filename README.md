@@ -232,6 +232,61 @@ pushd $GOPATH/src/gitlab.eng.vmware.com/PKS/pks-nsx-t-release
 popd
 ```
 
+Deploy `nsx-acceptance-tests` pipeline:
+```sh
+➜  control-tower git:(master) ✗ ct d --profile-tag=kubo --template-type nsx-acceptance-tests --profile-path=<(ct f outputs) --pipeline-name nsx-acceptance-tests
+```
+Create a context for it:
+```sh
+➜  control-tower git:(master) ✗ ct c c -n ntests --pipeline-name nsx-acceptance-tests --target npks
+context ntests is created
+use ct c v -n ntests to check details
+➜  control-tower git:(master) ✗ ct c set ntests
+current context is set to ntests
+```
+
+To check all jobs defined for `nsx-acceptance-tests` type of pipeline:
+```sh
+➜  control-tower git:(master) ✗ ct f j
++------+------------------------------------+
+|  ID  |                NAME                |
++------+------------------------------------+
+| 9427 | claim-lock                         |
+| 9428 | run-release-tests-release-lock     |
+| 9429 | run-release-tests                  |
+| 9430 | run-conformance-tests-release-lock |
+| 9431 | run-conformance-tests-delete-kubo  |
+| 9432 | run-conformance-tests              |
+| 9433 | run-release-tests-delete-kubo      |
++------+------------------------------------+
+```
+To unpause the pipeline:
+```sh
+➜  control-tower git:(master) ✗ ct f p -u
+pipeline fangyuanl-kubo-2 is unpaused.
+```
+To trigger the first job:
+```sh
+➜  control-tower git:(master) ✗ ct f trigger -j claim-lock
+started nsx-acceptance-tests/claim-lock #1
+```
+To pause the pipeline:
+```sh
+➜  control-tower git:(master) ✗ ct f p
+pipeline nsx-acceptance-tests is paused.
+```
+
+To get pipeline configuration yaml:
+```sh
+ct f c
+```
+To delete the pipeline:
+```
+➜  control-tower git:(master) ✗ ct f d
+pipeline nsx-acceptance-tests is deleted. now ntests is a dangling context%                                                            ➜  control-tower git:(master) ✗ ct c d -n ntests
+context ntests is deleted successfully
+```
+
 ## RAAS Related Pipelines
 To setup raas-related profiles automatically:
 ```sh
