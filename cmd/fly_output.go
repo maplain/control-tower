@@ -40,8 +40,9 @@ var (
 
 // outputCmd represents the output command
 var outputCmd = &cobra.Command{
-	Use:   "outputs",
-	Short: "get the output of a pipeline",
+	Use:     "outputs",
+	Aliases: []string{"o"},
+	Short:   "get the output of a pipeline",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := flyOutputCmdValidate()
 		cterror.Check(err)

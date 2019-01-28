@@ -25,6 +25,8 @@ setup_dir() {
       git stash
       echo ""
 
+      git checkout master
+
       echo "pulling latest ${target}"
       git pull
       echo ""

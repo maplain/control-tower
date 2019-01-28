@@ -17,8 +17,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/maplain/control-tower/pkg/secret"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -27,14 +27,15 @@ var (
 
 // generateCmd represents the generate command
 var generateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "generate a random secret as key for encryption/decryption",
+	Use:     "generate",
+	Aliases: []string{"g"},
+	Short:   "generate a random secret as key for encryption/decryption",
 	Long: `examples:
 
 ct secret generate
 ct secret generate -l 24`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(secret.RandStringByBytes(secretLength))
+		fmt.Printf("%s", secret.RandStringByBytes(secretLength))
 	},
 }
 

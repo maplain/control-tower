@@ -1,10 +1,10 @@
 build: build-ct move-to-path
 
 build-ct:
-	go build -o ct main.go
+	go build -o bin/ct main.go
 
 move-to-path:
-	mv ct /usr/local/bin
+	mv bin/ct /usr/local/bin
 
 set-raas:
 	hack/setup_raas setup

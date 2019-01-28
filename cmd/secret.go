@@ -20,8 +20,9 @@ import (
 
 // secretCmd represents the secret command
 var secretCmd = &cobra.Command{
-	Use:   "secret",
-	Short: "manages random encryption/decryption key",
+	Use:     "secret",
+	Aliases: []string{"s"},
+	Short:   "manages random encryption/decryption key",
 }
 
 func init() {
