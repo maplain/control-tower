@@ -260,6 +260,11 @@ To deploy a pipeline, basically there are three kinds of information needed:
 2.(optional) fly target and pipeline name. If not provided, values in current context are used;
 3.(optional) profiles that used to populate pipeline template yaml file. Three flags are available: `--profile-name`, `--profile-path` and `--profile-tag`.
 
+To login the context:
+```sh
+ct f login
+```
+
 ### pks-nsx-t-release Pipeline
 Deploy the pipeline:
 ```sh
@@ -323,6 +328,12 @@ To get pipeline configuration yaml:
 ```sh
 ct f c
 ```
+
+To get job configuration:
+```sh
+ct f c -j [job-name]
+```
+
 To delete the pipeline:
 ```
 ➜  control-tower git:(master) ✗ ct f d
