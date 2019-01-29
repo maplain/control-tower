@@ -1,10 +1,3 @@
-[Concepts](#concepts)
-- [Profile](#profile)
-  -  [Tags](#tags)
-- [Context](#context)
-- [Kubo Related Pipelines](#kubo-related-pipelines)
-- [RAAS Related Pipelines](#raas-related-pipelines)
-
 # Control Tower
 Control Tower aims to provide a better abstraction over Concourse pipelines so that it's easier to manage and fly. For now, it's used internally in PKS networking team. Thus some commands are only available for a few built-in type of pipelines.
 
@@ -56,6 +49,10 @@ Note: you need to use `--template` flag to inform ct that it's a templated profi
 
 When a template profile is used to create a pipeline, you'll be asked for the values by ct and one corresponding concrete profile will be optionally created.
 
+Generally speaking, following practices are recommended:
+* create normal profiles for static shared secrets
+* create template profiles for dynamic configurations that vary from feature to feature, eg: branches, pool-name etc
+
 This profiles are encrypted using a default key which might not suite your use case. To encrypt it using another key:
 ```sh
 ➜  control-tower git:(master) ✗ ct s g > secret
@@ -67,7 +64,56 @@ profile test-3 is created successfully
 a: b
 c: d
 ```
+## Kubo related profiles setup
+To setup kubo-related profiles automatically:
+```sh
+make set-kubo
+```
+To update kubo related profiles forcefully:
+```sh
+make set-kubo-force
+```
 
+
+Kubo related profiles will be setup automatically for you. To check them out:
+```sh
+➜  control-tower git:(master) ✗ ct p l -t kubo
++---------------------------+------+------------+
+|       PROFILE NAME        | TAGS | ISTEMPLATE |
++---------------------------+------+------------+
+| common-secrets            | kubo | false      |
+| deploy-kubo               | kubo | false      |
+| kubo-fangyuanl            | kubo | false      |
+| pks-nsx-t-release-secrets | kubo | false      |
++---------------------------+------+------------+
+```
+## RAAS related profiles setup
+To setup raas-related profiles automatically:
+```sh
+make set-raas
+```
+To update kubo related profiles forcefully:
+```sh
+make set-raas-force
+```
+RAAS related profiles will be setup automatically for you. To check them out:
+```sh
+ct p l -t releng
++----------------------------+--------+------------+
+|        PROFILE NAME        |  TAGS  | ISTEMPLATE |
++----------------------------+--------+------------+
+| nsx-t-secrets              | releng | false      |
+| pks-releng-write-locks-bot | releng | false      |
+| raas-credentials           | releng | false      |
+| vsphere-nsx-variables      | releng | false      |
++----------------------------+--------+------------+
+ct p l -t releng-template
++----------------+-----------------+------------+
+|  PROFILE NAME  |      TAGS       | ISTEMPLATE |
++----------------+-----------------+------------+
+| raas-variables | releng-template | true       |
++----------------+-----------------+------------+
+```
 ### Tags
 You can group profiles by applying tags.
 ```sh
@@ -90,6 +136,11 @@ To view profiles by tags:
 | test-2       | test         | false      |
 +--------------+--------------+------------+
 ```
+
+Tags are useful when:
+* you want to deploy a pipeline with multiple profiles
+* you want to separate similar configurations based on feature
+
 ## context
 context is an alias for concourse target, team and pipeline. ct provides a rich set of utilities that are associated with one context.
 
@@ -203,47 +254,39 @@ lock-name: nsx3
 
 The `outputs` for type `kubo` pipeline is defined to be a key-value yaml file so that it can be directly piped into another command's input. See examples below.
 
-## Kubo Related Pipelines
-To setup kubo-related profiles automatically:
-```sh
-make set-kubo
-```
-To update kubo related profiles forcefully:
-```sh
-make set-kubo-force
-```
+## Pipelines
+To deploy a pipeline, basically there are three kinds of information needed:
+1. pipeline yaml file which can be specified by either `--template` or `--template-type`. `--template` accepts a filepath, whereas `--template-type` accepts a list of reserved static types. See more details below;
+2.(optional) fly target and pipeline name. If not provided, values in current context are used;
+3.(optional) profiles that used to populate pipeline template yaml file. Three flags are available: `--profile-name`, `--profile-path` and `--profile-tag`.
 
-Kubo related profiles will be setup automatically for you. To check them out:
-```sh
-➜  control-tower git:(master) ✗ ct p l -t kubo
-+---------------------------+------+------------+
-|       PROFILE NAME        | TAGS | ISTEMPLATE |
-+---------------------------+------+------------+
-| common-secrets            | kubo | false      |
-| deploy-kubo               | kubo | false      |
-| kubo-fangyuanl            | kubo | false      |
-| pks-nsx-t-release-secrets | kubo | false      |
-+---------------------------+------+------------+
-```
-Deploy `pks-nsx-t-release` pipeline:
+### pks-nsx-t-release Pipeline
+Deploy the pipeline:
 ```sh
 pushd $GOPATH/src/gitlab.eng.vmware.com/PKS/pks-nsx-t-release
+  # ci/pks-nsx-t-release.yml is templated using erb semantics
   ct d --profile-tag kubo -m <(erb ci/pks-nsx-t-release.yml) -n [pipeline name]
 popd
 ```
 
-Deploy `nsx-acceptance-tests` pipeline:
+### Built-in Pipelines
+#### kubo pipeline
+Deploy kubo pipeline
 ```sh
-➜  control-tower git:(master) ✗ ct d --profile-tag=kubo --template-type nsx-acceptance-tests --profile-path=<(ct f outputs) --pipeline-name nsx-acceptance-tests
+ct d --profile-tag=kubo --template-type kubo -n kubo --target npks
 ```
-Create a context for it:
+#### nsx-acceptance-tests Pipeline
+If your current context is on a `kubo` type pipeline and it has run through successfully, then you can deploy a `nsx-acceptance-tests` pipeline with artifacts from that `kubo` pipeline.
 ```sh
 ➜  control-tower git:(master) ✗ ct c c -n ntests --pipeline-name nsx-acceptance-tests --target npks
 context ntests is created
 use ct c v -n ntests to check details
 ➜  control-tower git:(master) ✗ ct c set ntests
 current context is set to ntests
+
+➜  control-tower git:(master) ✗ ct d --profile-tag=kubo --template-type nsx-acceptance-tests --profile-path=<(ct f outputs) 
 ```
+In above example, we use the `outputs` from a `kubo` type pipeline to configure a `nsx-acceptance-tests` type pipeline so that the latter will use the exact versions of `kubeconfig` and `lock` generated by the first one.
 
 To check all jobs defined for `nsx-acceptance-tests` type of pipeline:
 ```sh
@@ -283,34 +326,15 @@ ct f c
 To delete the pipeline:
 ```
 ➜  control-tower git:(master) ✗ ct f d
-pipeline nsx-acceptance-tests is deleted. now ntests is a dangling context%                                                            ➜  control-tower git:(master) ✗ ct c d -n ntests
+pipeline nsx-acceptance-tests is deleted. now ntests is a dangling context%
+➜  control-tower git:(master) ✗ ct c d -n ntests
 context ntests is deleted successfully
 ```
-
-## RAAS Related Pipelines
-To setup raas-related profiles automatically:
+#### build-tile Pipeline
 ```sh
-make set-raas
+ct d --profile-tag=releng --profile-tag=releng-template --template-type build-tile -n fangyuanl-kubo-2 --target npks
 ```
-To update kubo related profiles forcefully:
+#### install-tile Pipeline
 ```sh
-make set-raas-force
-```
-RAAS related profiles will be setup automatically for you. To check them out:
-```sh
-ct p l -t releng
-+----------------------------+--------+------------+
-|        PROFILE NAME        |  TAGS  | ISTEMPLATE |
-+----------------------------+--------+------------+
-| nsx-t-secrets              | releng | false      |
-| pks-releng-write-locks-bot | releng | false      |
-| raas-credentials           | releng | false      |
-| vsphere-nsx-variables      | releng | false      |
-+----------------------------+--------+------------+
-ct p l -t releng-template
-+----------------+-----------------+------------+
-|  PROFILE NAME  |      TAGS       | ISTEMPLATE |
-+----------------+-----------------+------------+
-| raas-variables | releng-template | true       |
-+----------------+-----------------+------------+
+ct d --profile-tag=releng --profile-tag=releng-template --template-type install-tile -n fangyuanl-kubo-2 --target npks
 ```
