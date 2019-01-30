@@ -12,5 +12,6 @@ var (
 		"install-tile":         InstallTileTemplate,
 		"nsx-acceptance-tests": NsxAcceptanceTestsTemplate,
 		"kubo":                 DeployKuboPipelineTemplate,
+		"releng-acceptance-tests": RelengAcceptanceTestsPipelineTemplate,
 	}
 )

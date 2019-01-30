@@ -349,3 +349,7 @@ ct d --profile-tag=releng --profile-tag=releng-template --template-type build-ti
 ```sh
 ct d --profile-tag=releng --profile-tag=releng-template --template-type install-tile -n fangyuanl-kubo-2 --target npks
 ```
+#### releng-acceptance-tests pipeline
+```sh
+ct d --profile-path <(echo "releng-tests-lock-name: nsx1") -p common-secrets --profile-tag releng --profile-tag nodes_dns --template-type releng-acceptance-tests
+```
