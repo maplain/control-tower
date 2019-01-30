@@ -25,8 +25,9 @@ import (
 )
 
 var flyDeleteCmd = &cobra.Command{
-	Use:   "d",
-	Short: "delete in use context's pipeline",
+	Use:     "delete",
+	Aliases: []string{"d"},
+	Short:   "delete in use context's pipeline",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)

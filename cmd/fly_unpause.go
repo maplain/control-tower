@@ -29,8 +29,9 @@ var (
 )
 
 var flyUnpauseCmd = &cobra.Command{
-	Use:   "p",
-	Short: "if to pause in use context's pipeline",
+	Use:     "pause",
+	Aliases: []string{"p"},
+	Short:   "if to pause in use context's pipeline",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)

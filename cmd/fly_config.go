@@ -36,8 +36,9 @@ var (
 )
 
 var flyGetConfigCmd = &cobra.Command{
-	Use:   "c",
-	Short: "get pipeline config",
+	Use:     "config",
+	Aliases: []string{"c"},
+	Short:   "get pipeline config",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()
 		cterror.Check(err)
