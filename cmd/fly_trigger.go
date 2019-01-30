@@ -30,8 +30,9 @@ var (
 )
 
 var flyTriggerCmd = &cobra.Command{
-	Use:   "trigger",
-	Short: "trigger a job build",
+	Use:     "trigger",
+	Aliases: []string{"t"},
+	Short:   "trigger a job build",
 	Run: func(cmd *cobra.Command, args []string) {
 		jobName := flyTriggerJobName
 
