@@ -101,10 +101,10 @@ resources:
 - name: environment-lock
   type: pool
   source:
-    branch: ((environment-lock.vsphere67.nsx23.om23.branch))
-    pool: ((environment-lock.vsphere67.nsx23.om23.pool))
-    uri: ((environment-lock.vsphere67.nsx23.om23.uri))
-    private_key: ((pks-releng-write-locks-bot-key))
+    branch: ((pks-lock-branch))
+    pool: ((pks-lock-pool))
+    uri: git@gitlab.eng.vmware.com:PKS/pks-locks.git
+    private_key: ((gitlab-private-key))
 
 - name: pks-environment-version-numbers
   type: gcs-resource
@@ -141,11 +141,9 @@ jobs:
 - name: claim-lock
   serial: true
   plan:
-  - get: untested-tile
-    trigger: true
   - put: environment-lock
     params:
-      acquire: true
+      claim: ((install-tile-lock-name))
     timeout: 6h
 
 - name: ensure-clean-environment
@@ -153,8 +151,6 @@ jobs:
   plan:
   - aggregate:
     - get: untested-tile
-      passed:
-      - claim-lock
     - get: p-pks-integrations
     - get: pks-releng-ci
     - get: environment-lock
