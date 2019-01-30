@@ -143,21 +143,20 @@ groups:
     jobs:
       - claim-lock
       - run-release-tests
-      - run-release-tests-release-lock
-      - run-release-tests-delete-kubo
+      - claim-lock-conformance-tests
       - run-conformance-tests
-      - run-conformance-tests-release-lock
-      - run-conformance-tests-delete-kubo
 
-  - name: dev
+  - name: release-tests
     jobs:
+      - claim-lock
       - run-release-tests
-      - run-conformance-tests
-
-  - name: maintenance
-    jobs:
       - run-release-tests-release-lock
       - run-release-tests-delete-kubo
+
+  - name: conformance-tests
+    jobs:
+      - claim-lock-conformance-tests
+      - run-conformance-tests
       - run-conformance-tests-release-lock
       - run-conformance-tests-delete-kubo
 
@@ -181,6 +180,25 @@ jobs:
   - get: pks-lock
     passed: [ 'claim-lock' ]
   - <<: *release_pks_lock
+
+- name: run-release-tests-delete-kubo
+  serial: true
+  serial_groups:
+    - kubo-pks-nsx-t
+  plan:
+  - aggregate:
+    - get: git-pks-ci
+    - get: gcs-pks-nsx-t-tarball-untested
+    - get: gcs-nsx-cf-cni-tarball
+    - get: pks-lock
+      passed: [ 'claim-lock' ]
+      version: every
+    - get: ubuntu-xenial-stemcell
+    - get: kubeconfig
+
+  - <<: *delete_kubo
+
+  <<: *notify_failure
 
 # Run release tests
 - name: run-release-tests
@@ -231,10 +249,19 @@ jobs:
       MULTI_MASTER: false
       LOCK_VERSION: v1
 
+- name: claim-lock-conformance-tests
+  serial: true
+  plan:
+  - put: pks-lock
+    params:
+      claim: ((lock-name))
+
+  <<: *notify_failure
+
 - name: run-conformance-tests-release-lock
   plan:
   - get: pks-lock
-    passed: [ 'run-release-tests' ]
+    passed: [ 'claim-lock-conformance-tests' ]
   - <<: *release_pks_lock
 
 # Run release tests
@@ -245,17 +272,13 @@ jobs:
   plan:
   - aggregate:
     - get: git-pks-ci
-      passed: [ 'run-release-tests' ]
     - get: gcs-pks-nsx-t-tarball-untested
-      passed: [ 'run-release-tests' ]
     - get: gcs-nsx-cf-cni-tarball
     - get: pks-lock
-      passed: [ 'run-release-tests' ]
+      passed: [ 'claim-lock-conformance-tests' ]
       version: every
     - get: ubuntu-xenial-stemcell
-      passed: [ 'run-release-tests' ]
     - get: kubeconfig
-      passed: [ 'run-release-tests' ]
 
   - <<: *delete_kubo
   <<: *notify_failure
@@ -268,27 +291,21 @@ jobs:
   plan:
   - aggregate:
     - get: git-pks-ci
-      passed: [ 'run-release-tests' ]
       trigger: true
     - get: git-pks-nsx-t-release
-      passed: [ 'run-release-tests' ]
       trigger: true
     - get: pks-nsx-t-version
-      passed: [ 'run-release-tests' ]
       trigger: true
     - get: gcs-pks-nsx-t-tarball-untested
-      passed: [ 'run-release-tests' ]
     - get: gcs-nsx-cf-cni-tarball
       trigger: true
     - get: pks-lock
-      passed: [ 'run-release-tests' ]
+      passed: [ 'claim-lock-conformance-tests' ]
       version: every
       trigger: true
     - get: ubuntu-xenial-stemcell
-      passed: [ 'run-release-tests' ]
     - get: github-kubo-deployment
     - get: kubeconfig
-      passed: [ 'run-release-tests' ]
     - get: pks-releng-ci
 
   - task: run-k8s-conformance-tests
@@ -299,24 +316,4 @@ jobs:
       git-pks-ci: git-pks-ci
       lock: pks-lock
       kubeconfig: kubeconfig
-
-# Run release tests
-- name: run-release-tests-delete-kubo
-  serial: true
-  serial_groups:
-    - kubo-pks-nsx-t
-  plan:
-  - aggregate:
-    - get: git-pks-ci
-    - get: gcs-pks-nsx-t-tarball-untested
-    - get: gcs-nsx-cf-cni-tarball
-    - get: pks-lock
-      passed: [ 'claim-lock' ]
-      version: every
-    - get: ubuntu-xenial-stemcell
-    - get: kubeconfig
-
-  - <<: *delete_kubo
-
-  <<: *notify_failure
 `

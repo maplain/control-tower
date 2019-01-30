@@ -20,6 +20,7 @@ import (
 	"github.com/maplain/control-tower/pkg/config"
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -39,18 +40,35 @@ ct profile view -n deploy-kubo --key=1234567891123456`,
 		profiles, err := config.LoadProfileControlInfo()
 		cterror.Check(err)
 
-		d, err := profiles.LoadProfileByName(viewName, encryptionKey)
-		cterror.Check(err)
+		profileNames := []string{}
+		if viewName != "" {
+			profileNames = append(profileNames, viewName)
+		}
+		// profile cmd global parameter
+		for _, tag := range profileTags {
+			ps := profiles.GetProfilesByTag(tag)
+			for _, p := range ps {
+				profileNames = append(profileNames, p.Name)
+			}
+		}
 
-		yamld, err := io.DumpYaml(d)
-		cterror.Check(err)
+		if len(profileNames) == 0 {
+			cterror.Check(errors.Wrap(EmptyParameterError, "no profile match provided --name or --tags"))
+		}
 
-		fmt.Printf("%s", yamld)
+		for _, name := range profileNames {
+			d, err := profiles.LoadProfileByName(name, encryptionKey)
+			cterror.Check(err)
+
+			yamld, err := io.DumpYaml(d)
+			cterror.Check(err)
+
+			fmt.Printf("%s", yamld)
+		}
 	},
 }
 
 func init() {
 	profileCmd.AddCommand(viewCmd)
 	viewCmd.Flags().StringVarP(&viewName, "name", "n", "", "name of the profile")
-	viewCmd.MarkFlagRequired("name")
 }

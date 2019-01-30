@@ -34,7 +34,7 @@ const (
 	flyPipelineConfigFlag       = "--config"
 	flyPipelineLoadVarsFromFlag = "--load-vars-from"
 
-	ParameterMissingError = cterror.Error("parameter missing")
+	EmptyParameterError = cterror.Error("parameter empty")
 )
 
 var (
@@ -89,7 +89,7 @@ ct deploy -t deploy-kubo -p deploy-kubo`,
 				templatePath = tmpTemplateFile
 
 			} else {
-				cterror.Check(errors.Wrap(ParameterMissingError, "either --template or --template-type has to be provided"))
+				cterror.Check(errors.Wrap(EmptyParameterError, "either --template or --template-type has to be provided"))
 			}
 		} else {
 			if templateType != "" {

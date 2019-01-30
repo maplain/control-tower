@@ -121,7 +121,7 @@ resources:
   source:
     json_key: ((gcs-json-key))
     bucket: vmw-pks-releases
-    regexp: nsx-cf-cni/2.3.1/nsx-cf-cni-(.*).tgz
+    regexp: nsx-cf-cni/2.3.2/nsx-cf-cni-(.*).tgz
 
 # stemcell
 - name: ubuntu-xenial-stemcell

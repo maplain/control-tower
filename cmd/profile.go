@@ -26,6 +26,7 @@ import (
 
 var (
 	encryptionKey string
+	profileTags   []string
 )
 
 // profileCmd represents the profile command
@@ -38,6 +39,7 @@ var profileCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(profileCmd)
 	profileCmd.PersistentFlags().StringVarP(&encryptionKey, "key", "k", config.DefaultEncryptionKey, "a key to encrypt templates and profiles, which has to be in length of 16, 24 or 32 bytes")
+	profileCmd.PersistentFlags().StringSliceVar(&profileTags, "tags", profileTags, "tag of profiles, can be used multiple times to specify different tags")
 	profileCmd.MarkFlagRequired("key")
 }
 
