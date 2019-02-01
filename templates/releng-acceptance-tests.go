@@ -69,9 +69,8 @@ resources:
   type: git
   source:
     uri: ((git-vmware-pks-ci.uri))
-    branch: releng_nsx
+    branch: ((git-vmware-pks-ci.branch))
     private_key: ((vmware_github_ssh_key))
-    #    branch: ((git-vmware-pks-ci.branch))
 
 # Lock pool resource
 - name: environment-lock
