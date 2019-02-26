@@ -286,6 +286,8 @@ jobs:
   - task: deploy-mountebank
     file: pks-releng-ci/tasks/deploy-mountebank/task.yml
     privileged: true
+    params:
+      PIVNET_TOKEN: ((public-pivnet-token))
   - task: extract-complex-secrets
     file: pks-releng-ci/tasks/extract-complex-secrets/task.yml
   - task: generate-om-certificate

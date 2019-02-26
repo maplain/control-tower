@@ -104,9 +104,9 @@ resources:
   type: pool
   source:
     uri: git@gitlab.eng.vmware.com:PKS/pks-locks.git
-    branch: ((pks-lock-branch.value))
+    branch: ((pks-lock-branch))
     private_key: ((gitlab-private-key))
-    pool: ((pks-lock-pool.value))
+    pool: ((pks-lock-pool))
 
 # temp bucket to upload the release tars to
 - name: gcs-pks-nsx-t-tarball-untested
@@ -114,7 +114,7 @@ resources:
   source:
     json_key: ((gcs-json-key))
     bucket: ((pks-nsx-t-release-tarball-bucket))
-    regexp: ((pks-nsx-t-release-tarball-path.value))
+    regexp: ((pks-nsx-t-release-tarball-path))
 
 - name: gcs-nsx-cf-cni-tarball
   type: gcs

@@ -65,12 +65,12 @@ resources:
     branch: ((p-pks-integrations.branch))
     private_key: ((pks_releng_ci_ssh_key))
 
-- name: git-vmware-pks-ci
+- name: gitlab-pks-nsx-t-release
   type: git
   source:
-    uri: ((git-vmware-pks-ci.uri))
-    branch: ((git-vmware-pks-ci.branch))
-    private_key: ((vmware_github_ssh_key))
+    uri: git@gitlab.eng.vmware.com:PKS/pks-nsx-t-release.git
+    branch: ((gitlab-pks-nsx-t-release.branch))
+    private_key: ((gitlab-private-key))
 
 # Lock pool resource
 - name: environment-lock
@@ -136,7 +136,7 @@ jobs:
       file: pks-releng-ci/tasks/create-cluster/task.yml
       params:
         PLAN_NAME: multi-master
-        WORKER_INSTANCES: 3
+        WORKER_INSTANCES: 2
         NETWORK_PROFILE_NAME: pks-network-profile
       output_mapping:
         cluster-info: cluster-info-multi-nsx-acceptance-tests
@@ -197,7 +197,7 @@ jobs:
     - get: pks-releng-ci
       passed:
       - create-cluster-multi-nsx-acceptance-tests
-    - get: git-vmware-pks-ci
+    - get: gitlab-pks-nsx-t-release
     - get: cluster-info-multi-nsx-acceptance-tests
       passed:
       - create-cluster-multi-nsx-acceptance-tests
@@ -211,13 +211,13 @@ jobs:
       file: pks-releng-ci/tasks/download-kubectl/task.yml
     - task: nsx-acceptance-tests
       privileged: true
-      file: git-vmware-pks-ci/ci/tasks/run-pks-nsx-t-release-tests.yml
+      file: gitlab-pks-nsx-t-release/ci/tasks/run-pks-nsx-t-release-tests.yml
       input_mapping:
-        git-pks-ci: git-vmware-pks-ci
         pks-lock: environment-lock
         pks-release: environment-lock
         kubo-deployment: environment-lock
         pks-cluster-info: cluster-info-multi-nsx-acceptance-tests
+        git-pks-nsx-t-release: gitlab-pks-nsx-t-release
       params:
         DEPLOYMENT_NAME: test
         TEST_ENVIRONMENT: PKS
