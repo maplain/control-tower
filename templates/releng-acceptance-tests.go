@@ -54,9 +54,8 @@ resources:
   type: git
   source:
     uri: ((pks-releng-ci.uri))
-    branch: modify_create_cluster
+    branch: ((pks-releng-ci.branch))
     private_key: ((pks_releng_ci_ssh_key))
-    #    branch: ((pks-releng-ci.branch))
 
 - name: p-pks-integrations
   type: git

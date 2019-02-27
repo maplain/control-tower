@@ -29,8 +29,9 @@ var (
 
 // flyLoginCmd represents the log command
 var flyLoginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "login current target",
+	Use:     "login",
+	Short:   "login current target",
+	Aliases: []string{"l"},
 	Run: func(cmd *cobra.Command, args []string) {
 		err := flyLoginCmdValidate()
 		cterror.Check(err)
