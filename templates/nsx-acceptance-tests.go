@@ -133,7 +133,7 @@ resources:
   source:
     json_key: ((gcs-json-key))
     bucket: ((kubeconfig-bucket))
-    regexp: ((kubeconfig-path))
+    regexp: ((kubeconfig-folder))
 
 ############################################
 # Groups
