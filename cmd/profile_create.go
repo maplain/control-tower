@@ -94,7 +94,7 @@ deployment, ct will interactively prompt you to fill in templated values`,
 			}
 		} else {
 			v := io.InteractivePopulateStringValues(profileRegistry[profileType])
-			d, err = yaml.Marshal(&v)
+			d, err = yaml.Marshal(v.ToMap())
 			cterror.Check(err)
 		}
 
