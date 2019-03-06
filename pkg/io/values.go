@@ -100,12 +100,13 @@ func InteractivePopulateStringValues(inputs Values) Values {
 		}
 		v, _ := reader.ReadString('\n')
 		v = strings.TrimSpace(v)
-		if v != "" {
-			res.Add(name, v)
-		}
 		if v == "" && value.Value == "" {
 			goto Setvalue
 		}
+		if v == "" {
+			v = value.Value
+		}
+		res.Add(name, v)
 	}
 	return res
 }
