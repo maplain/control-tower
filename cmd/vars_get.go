@@ -24,8 +24,9 @@ import (
 )
 
 var (
-	varsGetVarFiles []string
-	varsGetKey      string
+	varsGetVarFiles  []string
+	varsGetKey       string
+	varsGetOnlyValue bool
 )
 
 var varsGetCmd = &cobra.Command{
@@ -48,7 +49,11 @@ var varsGetCmd = &cobra.Command{
 			}
 		}
 		for k, v := range res {
-			fmt.Printf("%s\n%s\n", k, v)
+			if varsGetOnlyValue {
+				fmt.Printf("%s\n", v)
+			} else {
+				fmt.Printf("%s\n%s\n", k, v)
+			}
 		}
 	},
 }
@@ -57,6 +62,7 @@ func init() {
 	varsCmd.AddCommand(varsGetCmd)
 	varsGetCmd.Flags().StringSliceVarP(&varsGetVarFiles, "var-file", "v", []string{}, "var files")
 	varsGetCmd.Flags().StringVarP(&varsGetKey, "key", "k", "", "key")
+	varsGetCmd.Flags().BoolVar(&varsGetOnlyValue, "only-value", true, "only print out values")
 	varsGetCmd.MarkFlagRequired("var-file")
 	varsGetCmd.MarkFlagRequired("key")
 }

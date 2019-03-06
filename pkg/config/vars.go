@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	cterror "github.com/maplain/control-tower/pkg/error"
 	"github.com/maplain/control-tower/pkg/io"
 	"github.com/pkg/errors"
@@ -29,11 +31,7 @@ func GetValue(path, key string) (string, error) {
 
 	for k, v := range d {
 		if k == key {
-			d, err := yaml.Marshal(v)
-			if err != nil {
-				return "", err
-			}
-			return string(d[:]), nil
+			return fmt.Sprintf("%v", v), nil
 		}
 	}
 	return "", KeyNotFoundError
