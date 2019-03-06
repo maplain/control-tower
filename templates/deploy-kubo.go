@@ -229,17 +229,13 @@ jobs:
   plan:
   - aggregate:
     - get: git-pks-ci
-      trigger: true
     - get: git-pks-networking
     - get: git-pks-nsx-t-release
-      trigger: true
     - get: pks-nsx-t-version
-      trigger: true
     - get: gcs-pks-nsx-t-tarball-untested
     - get: pks-lock
       trigger: true
       passed: [ 'claim-lock-kubo' ]
-      trigger: true
       version: every
     - get: ubuntu-xenial-stemcell
 
