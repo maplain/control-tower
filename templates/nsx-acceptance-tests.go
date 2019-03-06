@@ -209,8 +209,6 @@ jobs:
   - aggregate:
     - get: pks-releng-ci
     - get: p-pks-integrations
-    - get: git-pks-ci
-      trigger: true
     - get: git-pks-nsx-t-release
       trigger: true
     - get: pks-nsx-t-version
@@ -232,22 +230,19 @@ jobs:
   - task: run-tests
     file: git-pks-nsx-t-release/ci/tasks/run-pks-nsx-t-release-tests.yml
     input_mapping:
-      git-pks-ci: git-pks-ci
       pks-lock: pks-lock
       pks-release: gcs-pks-nsx-t-tarball-untested
       ncp-release: gcs-nsx-cf-cni-tarball
       pks-cli: pks-lock
       kubo-deployment: kubeconfig
+      git-pks-nsx-t-release: git-pks-nsx-t-release
     params:
       RELEASE_NAME: pks-nsx-t
       NCP_RELEASE_NAME: nsx-cf-cni
       DEPLOYMENT_NAME: kubo-pks-nsx-t
       TEST_ENVIRONMENT: kubo
-      PKS_CLI_USERNAME: pksci
-      PKS_CLI_PASSWORD: password1
       NETWORK_AUTOMATION: false
       MULTI_MASTER: false
-      LOCK_VERSION: v1
 
 - name: claim-lock-conformance-tests
   serial: true
