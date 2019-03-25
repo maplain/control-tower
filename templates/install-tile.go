@@ -103,7 +103,7 @@ resources:
   source:
     branch: ((pks-lock-branch))
     pool: ((pks-lock-pool))
-    uri: git@gitlab.eng.vmware.com:PKS/pks-locks.git
+    uri: git@locks.pks.eng.vmware.com:pks-locks.git
     private_key: ((gitlab-private-key))
 
 - name: pks-environment-version-numbers
