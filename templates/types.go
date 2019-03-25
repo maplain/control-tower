@@ -8,10 +8,11 @@ const (
 
 var (
 	SupportedTemplateType = map[string]string{
-		"build-tile":           BuildTileTemplate,
-		"install-tile":         InstallTileTemplate,
-		"nsx-acceptance-tests": NsxAcceptanceTestsTemplate,
-		"kubo":                 DeployKuboPipelineTemplate,
+		"build-tile":              BuildTileTemplate,
+		"install-tile":            InstallTileTemplate,
+		"nsx-acceptance-tests":    NsxAcceptanceTestsTemplate,
+		"kubo":                    DeployKuboPipelineTemplate,
 		"releng-acceptance-tests": RelengAcceptanceTestsPipelineTemplate,
+		"build-pks-nsx-t-release": BuildPksNSXTReleaseTemplate,
 	}
 )

@@ -104,14 +104,7 @@ resources:
     branch: ((pks-lock-branch))
     pool: ((pks-lock-pool))
     uri: git@locks.pks.eng.vmware.com:pks-locks.git
-    private_key: ((gitlab-private-key))
-
-- name: pks-environment-version-numbers
-  type: gcs-resource
-  source:
-    bucket: ((pks-environment-version-numbers.bucket))
-    json_key: ((pks-releng-gcp-json))
-    regexp: om23/environment-version-numbers-.*-(\d.*).tar.gz
+    private_key: ((pks-locks-private-key))
 
 # Miscellaneous resources
 - name: failure-logs
@@ -201,18 +194,6 @@ jobs:
       params:
         ENV_LOCK_FILE: environment-lock/metadata
         PIVNET_TOKEN: ((public-pivnet-token))
-    - task: get-product-version-from-tile
-      file: pks-releng-ci/tasks/get-product-version-from-tile.yml
-      input_mapping:
-        tile: untested-tile
-    - task: environment-version-numbers
-      privileged: true
-      file: pks-releng-ci/tasks/get-environment-version-numbers.yml
-      params:
-        ENV_LOCK_FILE: environment-lock/metadata
-    - put: pks-environment-version-numbers
-      params:
-        file: environment-version-numbers/environment-version-numbers-*
     timeout: 1h
   on_failure:
     do:
@@ -346,6 +327,7 @@ jobs:
   plan:
   - get: environment-lock
     passed: [ 'configure-and-deploy-tile' ]
+    trigger: true
   - <<: *release_lock
 
 `
