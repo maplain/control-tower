@@ -1,3 +1,7 @@
+[Control Tower](#Control Tower)
+[Installation](#Installation)
+[PKS Networking Workflow](#PKS Networking Workflow)
+
 # Control Tower
 Control Tower aims to provide a better abstraction over Concourse pipelines so that it's easier to manage and fly. For now, it's used internally in PKS networking team. Thus some commands are only available for a few built-in type of pipelines.
 
