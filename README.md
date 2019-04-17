@@ -342,14 +342,17 @@ pipeline nsx-acceptance-tests is deleted. now ntests is a dangling context%
 context ntests is deleted successfully
 ```
 #### build-tile Pipeline
+This pipeline will build a PKS tile based on your configuration
 ```sh
 ct d --profile-tag=releng --profile-tag=releng-template --template-type build-tile -n fangyuanl-kubo-2 --target npks
 ```
 #### install-tile Pipeline
+This pipeline will install a PKS tile to the specified Nimbus testbed
 ```sh
 ct d --profile-tag=releng --profile-tag=releng-template --template-type install-tile -n fangyuanl-kubo-2 --target npks
 ```
 #### releng-acceptance-tests pipeline
+This pipeline will deploy a k8s cluster in given PKS deployment and run acceptance-tests
 ```sh
 ct d --profile-path <(echo "releng-tests-lock-name: nsx1") -p common-secrets --profile-tag releng --profile-tag nodes_dns --template-type releng-acceptance-tests
 ```

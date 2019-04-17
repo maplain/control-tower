@@ -2,33 +2,10 @@
 
 set -euo pipefail
 
-secret_files=("common-secrets" "pks-nsx-t-release-secrets")
 deploy_kubo_profile="kubo-$(whoami)"
 
-setup_dir() {
-  target=${1:?}
-  repo_url=${2:?}
-
-  if [ ! -d ${target} ]; then
-    echo "${target} does not exist, cloning it"
-    parent="$(dirname ${target})"
-    mkdir -p ${parent}
-    git clone ${repo_url} ${target}
-  else
-    pushd ${target} 2>&1 >/dev/null
-      echo "trying to stash ${target}"
-      echo "you local change will be stashed, use \`git stash apply\` to restore"
-      git stash
-      echo ""
-
-      git checkout master
-
-      echo "pulling latest ${target}"
-      git pull
-      echo ""
-    popd 2>&1 >/dev/null
-  fi
-}
+SCRIPT_DIR="$(dirname "${BASH_SOURCE}")"
+source $SCRIPT_DIR/utils
 
 setup_usage() {
   echo "usage: setup_kubo setup [--overwrite] [--skip]"
@@ -57,16 +34,15 @@ setup() {
     esac
   done
 
-  PKS_NSX_T_RELEASE_DIR=$GOPATH/src/gitlab.eng.vmware.com/PKS/pks-nsx-t-release
-  PKS_NSX_T_RELEASE_REPO=git@gitlab.eng.vmware.com:PKS/pks-nsx-t-release.git
-
-  profile_tag="kubo"
-
+  setup_kubo_env
   setup_dir ${PKS_NSX_T_RELEASE_DIR} ${PKS_NSX_T_RELEASE_REPO}
 
   echo -n "Enter vault password:"
   read -s vault_password
   echo
+
+  secret_files=("common-secrets" "pks-nsx-t-release-secrets")
+  profile_tag="kubo"
 
   pushd ${PKS_NSX_T_RELEASE_DIR} 2>&1 >/dev/null
     for f in "${secret_files[@]}"; do

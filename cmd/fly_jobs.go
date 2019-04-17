@@ -28,6 +28,7 @@ import (
 
 var flyJobsCmd = &cobra.Command{
 	Use:     "jobs",
+	Short:   "pipeline job information",
 	Aliases: []string{"j"},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, c, err := config.LoadInUseContext()

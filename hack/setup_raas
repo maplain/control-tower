@@ -2,37 +2,8 @@
 
 set -euo pipefail
 
-secret_files=("raas-credentials" "nsx-t-secrets" "pks-releng-write-locks-bot")
-iaas_secret_file="vsphere-nsx-variables"
-raas_variable_file="raas-variables"
-
 SCRIPT_DIR="$(dirname "${BASH_SOURCE}")"
 source $SCRIPT_DIR/utils
-
-setup_dir() {
-  target=${1:?}
-  repo_url=${2:?}
-
-  if [ ! -d ${target} ]; then
-    echo "${target} does not exist, cloning it"
-    parent="$(dirname ${target})"
-    mkdir -p ${parent}
-    git clone ${repo_url} ${target}
-  else
-    pushd ${target} 2>&1 >/dev/null
-      echo "trying to stash ${target}"
-      echo "you local change will be stashed, use \`git stash apply\` to restore"
-      git stash
-      echo ""
-
-      git checkout master
-
-      echo "pulling latest ${target}"
-      git pull
-      echo ""
-    popd 2>&1 >/dev/null
-  fi
-}
 
 setup_usage() {
   echo "usage: setup_raas setup [--overwrite]"
@@ -51,21 +22,18 @@ setup() {
       ;;
   esac
 
-  # export this var so we can list pipelines defined there
-  RAAS_SECRETS_DIR=$GOPATH/src/github.com/pivotal-cf/raas-secrets
-  RAAS_REPO=git@github.com:pivotal-cf/raas-secrets.git
-
-  setup_env # from hack/utils
-  PKS_RELENG_CI_REPO=git@github.com:pivotal-cf/pks-releng-ci.git
-
-  releng_profile_tag="releng"
-
-  setup_dir ${RAAS_SECRETS_DIR} ${RAAS_REPO}
+  setup_raas_env # from hack/utils
+  setup_dir ${RAAS_SECRETS_DIR} ${RAAS_SECRETS_REPO}
   setup_dir ${PKS_RELENG_CI_DIR} ${PKS_RELENG_CI_REPO}
 
   echo -n "Enter vault password:"
   read -s vault_password
   echo
+
+  secret_files=("raas-credentials" "nsx-t-secrets" "pks-releng-write-locks-bot")
+  iaas_secret_file="vsphere-nsx-variables"
+  raas_variable_file="raas-variables"
+  releng_profile_tag="releng"
 
   pushd ${RAAS_SECRETS_DIR} 2>&1 >/dev/null
     for f in "${secret_files[@]}"; do

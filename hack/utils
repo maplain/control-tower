@@ -15,10 +15,48 @@ list_nsx_pipelines() {
   ls ${PKS_RELENG_CI_DIR}/*.yml | grep nsx
 }
 
-setup_env() {
+setup_raas_env() {
   export PKS_RELENG_CI_DIR=$GOPATH/src/github.com/pivotal-cf/pks-releng-ci
+  #export PKS_RELENG_CI_REPO=git@github.com:pivotal-cf/pks-releng-ci.git
+  export PKS_RELENG_CI_REPO=https://github.com/pivotal-cf/pks-releng-ci
+  export RAAS_SECRETS_DIR=$GOPATH/src/github.com/pivotal-cf/raas-secrets
+  #export RAAS_SECRETS_REPO=git@github.com:pivotal-cf/raas-secrets.git
+  export RAAS_SECRETS_REPO=https://github.com/pivotal-cf/raas-secrets
+}
+
+setup_kubo_env() {
+  export PKS_NSX_T_RELEASE_DIR=$GOPATH/src/gitlab.eng.vmware.com/PKS/pks-nsx-t-release
+  #export PKS_NSX_T_RELEASE_REPO=git@gitlab.eng.vmware.com:PKS/pks-nsx-t-release.git
+  export PKS_NSX_T_RELEASE_REPO=https://gitlab.eng.vmware.com/PKS/pks-nsx-t-release
 }
 
 unset_env() {
   unset PKS_RELENG_CI_DIR
+}
+
+setup_dir() {
+  target=${1:?}
+  repo_url=${2:?}
+
+  if [ ! -d ${target} ]; then
+    echo "folder ${target} does not exist, create it"
+    parent="$(dirname ${target})"
+    mkdir -p ${parent}
+
+    echo "copy ${repo_url} to ${target}"
+    git clone ${repo_url} ${target}
+  else
+    pushd ${target} 2>&1 >/dev/null
+      echo "trying to stash ${target}"
+      echo "you local change will be stashed, use \`git stash apply\` to restore"
+      git stash
+      echo ""
+
+      git checkout master
+
+      echo "pulling latest ${target}"
+      git pull
+      echo ""
+    popd 2>&1 >/dev/null
+  fi
 }
