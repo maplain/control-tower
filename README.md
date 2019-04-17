@@ -356,3 +356,6 @@ This pipeline will deploy a k8s cluster in given PKS deployment and run acceptan
 ```sh
 ct d --profile-path <(echo "releng-tests-lock-name: nsx1") -p common-secrets --profile-tag releng --profile-tag nodes_dns --template-type releng-acceptance-tests
 ```
+
+# PKS Networking Workflow
+check out [doc](https://github.com/maplain/control-tower/blob/master/FEATURE-DEVELOPMENT.md)
