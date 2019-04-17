@@ -1,10 +1,12 @@
 [Control Tower](#Control-Tower)
+
 [Installation](#Installation)
+
 [Concepts](#Concepts)
  - [Profile](##Profile)
- - [Kubo related profiles setup](##Kubo-related-profiles-setup)
- - [RAAS related profiles setup](##RAAS-related-profiles-setup)
-   - [Tags](###Tags)
+   - [Kubo related profiles setup](###Kubo-related-profiles-setup)
+   - [RAAS related profiles setup](###RAAS-related-profiles-setup)
+ - [Tags](##Tags)
  - [context](##context)
  - [Pipelines](##Pipelines)
    - [pks-nsx-t-release Pipeline](###pks-nsx-t-release-Pipeline)
@@ -14,6 +16,7 @@
     - [build-tile Pipeline](####build-tile-Pipeline)
     - [install-tile Pipeline](####install-tile-Pipeline)
     - [releng-acceptance-tests pipeline](####releng-acceptance-tests-pipeline)
+
 [PKS Networking Workflow](#PKS-Networking-Workflow)
 
 # Control Tower
@@ -82,7 +85,7 @@ profile test-3 is created successfully
 a: b
 c: d
 ```
-## Kubo related profiles setup
+### Kubo related profiles setup
 To setup kubo-related profiles automatically:
 ```sh
 make set-kubo
@@ -105,7 +108,7 @@ Kubo related profiles will be setup automatically for you. To check them out:
 | pks-nsx-t-release-secrets | kubo | false      |
 +---------------------------+------+------------+
 ```
-## RAAS related profiles setup
+### RAAS related profiles setup
 To setup raas-related profiles automatically:
 ```sh
 make set-raas
@@ -132,7 +135,7 @@ ct p l -t releng-template
 | raas-variables | releng-template | true       |
 +----------------+-----------------+------------+
 ```
-### Tags
+## Tags
 You can group profiles by applying tags.
 ```sh
 ➜  control-tower git:(master) ✗ ct p t -n test -t test,example

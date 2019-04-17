@@ -1,3 +1,17 @@
+- [Background](###Background)
+- [Step1 Development](###Step1-Development)
+- [Step2 Create pipeline to build dev release](###Step2-Create-pipeline-to-build-dev-release)
+  - [Create profile for release storage options](####Create-profile-for-release-storage-options)
+  - [Create pipeline](####Create-pipeline)
+- [Step3 Bump release version](###Step3-Bump-release-version)
+  - [p-pks-integrations](####p-pks-integrations)
+  - [pks-releng-ci](####pks-releng-ci)
+- [Step4 Raas Pipelines](###Step4-Raas-Pipelines)
+  - [Create profiles for automation credentials](####Create-profiles-for-automation-credentials)
+  - [create pipeline](####create-pipeline)
+- [Step5 Install Dev PKS](###Step5-Install-Dev-PKS)
+- [Summary](###Summary)
+
 PKS networking team is always striving to automate as much as possible to make daily life easier. This document describes the workflow of feature development in our team.
 
 ### Background
@@ -5,10 +19,10 @@ Pipelines managing tile lifecycle like: tile creation, configuration, deployment
 
 **_Make sure_** to manually go through the workflow or at least take a look at their [official doc](https://github.com/pivotal-cf/p-pks-integrations/blob/master/CONTRIBUTING.md#fly-your-test-pipelines) firstly before you start. Automation described here only aims to resolve some pain points along the way.
 
-### Step1: Development
+### Step1 Development
 Developers make changes in pks-nsx-t-release repo.
 
-### Step2: Create pipeline to build dev release
+### Step2 Create pipeline to build dev release
 #### Create profile for release storage options
 Firstly, create a `profile` in `control tower` to describe Google Bucket options for your release. For example:
 ```
@@ -36,7 +50,7 @@ Note: above profile and pipeline can be reused once created. Specify different b
 
 After pipeline finishes, a dev release will be built, eg: `pks-nsx-t-1.26.0-dev.22`
 
-### Step3: Bump release version
+### Step3 Bump release version
 Let's firstly do a quick review of `RAAS`' workstyle describe in doc linked in `Background`.
 
 #### p-pks-integrations
@@ -79,7 +93,7 @@ Let's say new profile's name is `master-bump-pks-nsx-t-dev` which sets both bran
 
 Now, after pipeline finishes, there will be a branch with the same name created both in `p-pks-integrations` and `pks-releng-ci` repo. Eg: `add-pks-nsx-t-1.26.0-dev.22`.
 
-### Raas Pipelines
+### Step4 Raas Pipelines
 From here, you're already fully prepared to fly raas pipelines by:
 1. go to `pks-releng-ci` repo locally in terminal;
 2. check out above auto-created branch `add-pks-nsx-t-1.26.0-dev.22`;
@@ -106,7 +120,7 @@ Above command creates a pipeline `[pipeline name]` in Concourse target `[target]
 
 Note, we use the same template profile again. Branches here should be branches created above automatically to let raas pipelines use updated `dependencies.yml`. As a result, another new profile will be created, eg: `add-pks-nsx-t-1.26.0-dev.22`
 
-### Install Dev PKS
+### Step5 Install Dev PKS
 After tile is built, we'd like to install it in a specified testbed.
 ```
 ct d -p pks-locks-private-key --template-type install-tile -p common-secrets --profile-tag releng  --profile-path=<(echo -ne "install-tile-lock-name: fangyuanl\npks-lock-branch: fangyuanl\npks-lock-pool: nsxt-23-om23") -p add-pks-nsx-t-1.26.0-dev.22
