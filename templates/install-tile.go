@@ -56,13 +56,6 @@ resources:
     regexp: ((untested-tile.regexp))
     json_key: ((pks-releng-gcp-json))
 
-# Git resources
-- name: pks-om-cli
-  type: git
-  source:
-    uri: ((pks-om-cli.uri))
-    branch: ((pks-om-cli.branch))
-    private_key: ((pks_releng_ci_ssh_key))
 - name: pks-releng-ci
   type: git
   source:
@@ -84,18 +77,6 @@ resources:
     private_key: ((pks_releng_ci_ssh_key))
     tag_filter: ((git-tile-pipeline.tag_filter))
     uri: ((git-tile-pipeline.uri))
-
-- name: git-environments-metadata
-  type: git
-  source:
-    branch: ((git-environments-metadata.branch))
-    private_key: ((pks_releng_ci_ssh_key))
-    uri: ((git-environments-metadata.uri))
-
-- name: bosh-dns-release
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/bosh-dns-release
 
 # Lock pool resource
 - name: environment-lock
@@ -150,7 +131,6 @@ jobs:
       passed:
       - claim-lock
       trigger: true
-    - get: pks-om-cli
   - task: ensure-clean-environment
     privileged: true
     file: pks-releng-ci/tasks/ensure-clean-environment/task.yml
@@ -236,7 +216,6 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: pks-om-cli
     - get: environment-lock
       passed:
       - add-tile
@@ -250,10 +229,8 @@ jobs:
     - get: pks-releng-ci
       passed:
       - add-tile
-    - get: git-environments-metadata
     - get: git-tile-pipeline
     - get: pivnet-stemcell
-    - get: bosh-dns-release
   - task: get-product-version-from-tile
     file: pks-releng-ci/tasks/get-product-version-from-tile.yml
     input_mapping:
@@ -283,8 +260,6 @@ jobs:
   - task: configure-uaa
     privileged: true
     file: pks-releng-ci/tasks/setup-uaa/task.yml
-    input_mapping:
-      kubo-odb-ci: git-environments-metadata
   on_failure:
     do:
     - put: notify
