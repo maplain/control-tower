@@ -63,6 +63,13 @@ resources:
     branch: ((pks-releng-ci.branch))
     private_key: ((pks_releng_ci_ssh_key))
 
+- name: kubo-odb-ci
+  type: git
+  source:
+    branch: ((kubo-odb-ci.branch))
+    private_key: ((pks_releng_ci_ssh_key))
+    uri: ((kubo-odb-ci.uri))
+
 - name: p-pks-integrations
   type: git
   source:
@@ -223,6 +230,7 @@ jobs:
     - get: untested-tile
       passed:
       - add-tile
+    - get: kubo-odb-ci
     - get: p-pks-integrations
       passed:
       - add-tile
