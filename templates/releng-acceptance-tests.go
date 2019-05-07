@@ -78,7 +78,7 @@ resources:
     branch: ((pks-lock-branch))
     pool: ((pks-lock-pool))
     uri: git@locks.pks.eng.vmware.com:pks-locks.git
-    private_key: ((gitlab-private-key))
+    private_key: ((pks-locks-private-key))
 
 # Miscellaneous resources
 - name: failure-logs
